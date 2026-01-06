@@ -1,0 +1,43 @@
+<div class="history-container">
+  <h2>🏆 Galeria Mea</h2>
+
+  <div class="capturi-grid">
+    <div *ngFor="let captura of capturi" class="catch-card">
+      <div class="card-image">
+        <img [src]="captura.poza_url ? (serverUrl + captura.poza_url) : 'https://via.placeholder.com/300'" alt="Fish">
+      </div>
+      
+      <div class="card-content">
+        <h3>{{ captura.specie }}</h3>
+        <p>📏 {{ captura.lungime }} cm</p>
+        <p>{{ captura.detalii }}</p>
+        
+        <div class="card-actions">
+            <button (click)="startEdit(captura)" class="btn-edit">✏️ Editează</button>
+            <button (click)="onDelete(captura.id)" class="btn-delete">🗑️ Șterge</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="editMode" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Editează Captura</h3>
+      
+      <label>Specie</label>
+      <input [(ngModel)]="currentCaptura.specie" class="modal-input">
+      
+      <label>Lungime (cm)</label>
+      <input type="number" [(ngModel)]="currentCaptura.lungime" class="modal-input">
+      
+      <label>Detalii</label>
+      <textarea [(ngModel)]="currentCaptura.detalii" class="modal-input"></textarea>
+
+      <div class="modal-actions">
+        <button (click)="saveEdit()" class="btn-save">Salvează</button>
+        <button (click)="cancelEdit()" class="btn-cancel">Anulează</button>
+      </div>
+    </div>
+  </div>
+
+</div>

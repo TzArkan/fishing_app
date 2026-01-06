@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
-import { AddCatchComponent } from './components/add-catch/add-catch'; // Verifică numele!
+import { AddCatchComponent } from './components/add-catch/add-catch'; 
 import { LoginComponent } from './components/login/login';
 import { RegisterComponent } from './components/register/register';
+import { HistoryComponent } from './components/history/history'; 
 
 export const routes: Routes = [
   // 1. Când intri pe site, te duce la Login
@@ -10,7 +11,7 @@ export const routes: Routes = [
   // 2. Rutele de Auth
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-
+  { path: 'istoric', component: HistoryComponent },
   // 3. Ruta principală (doar după logare ajungi aici)
   { path: 'adauga', component: AddCatchComponent }
 ];

@@ -3,19 +3,39 @@
 
   <div class="form-group">
     <label>Specie:</label>
-    <input type="text" [(ngModel)]="specie" placeholder="ex: Știucă" class="form-control">
+    <select [(ngModel)]="specie" class="form-control custom-select">
+      <option value="" disabled selected>-- Alege Specia --</option>
+      <option *ngFor="let peste of speciiLista" [value]="peste">
+        {{ peste }}
+      </option>
+    </select>
   </div>
 
   <div class="form-group">
     <label>Lungime (cm):</label>
-    <input type="number" [(ngModel)]="lungime" placeholder="ex: 55" class="form-control">
+    <input 
+      type="number" 
+      [(ngModel)]="lungime" 
+      placeholder="ex: 55" 
+      min="0" 
+      oninput="validity.valid||(value='');"
+      class="form-control">
   </div>
 
   <div class="form-group">
     <label>Detalii:</label>
-    <textarea [(ngModel)]="detalii" placeholder="Momeală, vreme, etc." class="form-control"></textarea>
+    <textarea [(ngModel)]="detalii" placeholder="Momeală, vreme, locație, etc." class="form-control"></textarea>
   </div>
 
+  <div class="form-group">
+    <label>Data Capturii:</label>
+    <input 
+      type="date" 
+      [(ngModel)]="dataCapturii" 
+      class="form-control"
+      style="cursor: pointer;">
+  </div>
+  
   <div class="form-group">
     <label>Alege o fotografie:</label>
     <input type="file" (change)="onFileSelected($event)" class="form-control-file">

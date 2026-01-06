@@ -1,27 +1,25 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, Router, NavigationEnd } from '@angular/router'; // Importăm Router
-import { CommonModule } from '@angular/common'; // Importăm CommonModule pentru directive
+import { RouterOutlet, Router, NavigationEnd, RouterLink } from '@angular/router'; // <--- 1. IMPORTĂ AICI RouterLink
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule], // Adăugăm CommonModule
+  // 2. ADAUGĂ RouterLink MAI JOS ÎN LISTA DE IMPORTS
+  imports: [RouterOutlet, CommonModule, RouterLink], 
   templateUrl: './app.html',
-  styleUrl: './app.css' // Atenție: poate fi styleUrl sau styleUrls
+  styleUrl: './app.css'
 })
 export class App {
   title = 'Fishing App';
-  showMenu: boolean = true; // Variabila care decide dacă arătăm meniul
+  showMenu: boolean = true;
 
   constructor(private router: Router) {
-    // Ne abonăm la evenimentele de navigare
     this.router.events.subscribe((event) => {
-      // Verificăm doar când navigarea s-a terminat
       if (event instanceof NavigationEnd) {
-        // Dacă suntem pe pagina de login sau register, ascundem meniul
-        const currentUrl = event.urlAfterRedirects; // url-ul curent
-        
-        if (currentUrl === '/login' || currentUrl === '/register' || currentUrl === '/') {
+        const currentUrl = event.urlAfterRedirects;
+        // Ascunde meniul pe paginile de login/register
+        if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl === '/') {
            this.showMenu = false;
         } else {
            this.showMenu = true;
@@ -30,11 +28,8 @@ export class App {
     });
   }
 
-  // Funcție de Logout (o folosim imediat în HTML)
   logout() {
-    // Ștergem userul din memorie
     localStorage.removeItem('user');
-    // Îl trimitem la login
     this.router.navigate(['/login']);
   }
 }

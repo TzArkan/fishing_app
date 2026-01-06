@@ -15,16 +15,24 @@ export class FishingService {
     return this.http.post(`${this.apiUrl}/register`, userObj);
   }
 
+  stergeCaptura(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/capturi/${id}`);
+  }
+
+  editeazaCaptura(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/capturi/${id}`, data);
+  }
+
   login(userObj: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, userObj);
   }
 
-  // Metodele vechi (ATENȚIE: am actualizat URL-ul aici)
   adaugaCaptura(data: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}/capturi`, data);
   }
 
-  getCapturi(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/capturi`);
+  getCapturi(userId: number): Observable<any[]> {
+    // Trimitem userId ca parametru în URL (?userId=...)
+    return this.http.get<any[]>(`${this.apiUrl}/capturi?userId=${userId}`);
   }
 }
