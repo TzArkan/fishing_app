@@ -1,0 +1,21 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>🔐 Login Fishing App</h2>
+    
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" [(ngModel)]="email" placeholder="pescar@exemplu.ro">
+    </div>
+
+    <div class="form-group">
+      <label>Parolă</label>
+      <input type="password" [(ngModel)]="password" placeholder="******">
+    </div>
+
+    <button (click)="onLogin()" class="btn-primary">Intră în cont</button>
+
+    <div class="footer-link">
+      <p>Nu ai cont? <a routerLink="/register">Înregistrează-te aici</a></p>
+    </div>
+  </div>
+</div>

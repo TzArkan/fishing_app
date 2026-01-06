@@ -1,0 +1,25 @@
+<div class="add-catch-container">
+  <h2>Adaugă o Captură Nouă</h2>
+
+  <div class="form-group">
+    <label>Specie:</label>
+    <input type="text" [(ngModel)]="specie" placeholder="ex: Știucă" class="form-control">
+  </div>
+
+  <div class="form-group">
+    <label>Lungime (cm):</label>
+    <input type="number" [(ngModel)]="lungime" placeholder="ex: 55" class="form-control">
+  </div>
+
+  <div class="form-group">
+    <label>Detalii:</label>
+    <textarea [(ngModel)]="detalii" placeholder="Momeală, vreme, etc." class="form-control"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Alege o fotografie:</label>
+    <input type="file" (change)="onFileSelected($event)" class="form-control-file">
+  </div>
+
+  <button (click)="onSubmit()" class="btn-save">Salvează Captura</button>
+</div>
