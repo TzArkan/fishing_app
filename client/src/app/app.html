@@ -1,10 +1,16 @@
-<nav style="background: #333; padding: 1rem; margin-bottom: 20px;">
-  <a routerLink="/harta" style="color: white; margin-right: 20px; text-decoration: none; font-size: 18px;">
-    🗺️ Harta Capturi
-  </a>
-  <a routerLink="/adauga" style="color: white; text-decoration: none; font-size: 18px;">
-    ➕ Adaugă Captură
-  </a>
+<nav *ngIf="showMenu" style="background: #2c3e50; padding: 1rem; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+  
+  <div>
+    <a routerLink="/adauga" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
+      ➕ Adaugă Captură
+    </a>
+    
+    </div>
+
+  <button (click)="logout()" style="background-color: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+    Ieșire Cont 🚪
+  </button>
+
 </nav>
 
 <router-outlet></router-outlet>

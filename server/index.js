@@ -22,11 +22,11 @@ app.use('/uploads', express.static('uploads'));
 
 // Configurare Baza de Date
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'fishing_app',
-  password: 'fishing', // <--- PUNE PAROLA TA AICI
-  port: 5432,
+  user: 'postgres.vdltfoaglomyxvfrsmur',
+  host: 'aws-1-eu-west-1.pooler.supabase.com',
+  database: 'postgres',
+  password: 'UU2aqx$EhG7b9/Y', // <--- PUNE PAROLA TA AICI
+  port: 6543,
 });
 
 // Configurare stocare poze (Multer)
