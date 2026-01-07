@@ -26,7 +26,9 @@ export class LoginComponent {
         // Salvăm faptul că suntem logați (opțional pentru viitor)
         localStorage.setItem('user', JSON.stringify(res.user));
         // Navigăm la pagina principală
-        this.router.navigate(['/adauga']);
+
+        
+        this.router.navigate(['/profil']);
       },
       error: (err) => {
         alert(err.error.message || "Eroare la logare");

@@ -119,8 +119,40 @@ app.listen(port, () => {
 });
 
 // --- RUTE DE AUTENTIFICARE ---
-
 // 1. REGISTER (Înregistrare utilizator nou)
+app.post('/api/register', async (req, res) => {
+    try {
+        const { nume, email, password } = req.body;
+
+        if (!nume || !email || !password) {
+            return res.status(400).json({ message: "Date incomplete!" });
+        }
+
+        // Verificăm dacă email-ul există deja
+        const existingUser = await pool.query(
+            "SELECT * FROM users WHERE email = $1",
+            [email]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({ message: "Email deja folosit!" });
+        }
+
+        // Inserăm utilizatorul
+        const newUser = await pool.query(
+            "INSERT INTO users (nume, email, password) VALUES ($1, $2, $3) RETURNING *",
+            [nume, email, password]
+        );
+
+        res.status(201).json({ success: true, user: newUser.rows[0] });
+
+    } catch (err) {
+        console.error("Eroare register:", err.message);
+        res.status(500).json({ message: "Eroare server" });
+    }
+});
+
+
 app.post('/api/capturi', upload.single('poza'), async (req, res) => {
     try {
         // 1. Citim și data_capturii din formular
@@ -157,10 +189,73 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: "Email sau parolă incorectă!" });
         }
 
+        // verificăm dacă profilul există
+        const profileCheck = await pool.query(
+        'SELECT * FROM profiles WHERE user_id = $1',
+        [user.rows[0].id]
+        );
+
+        if (profileCheck.rows.length === 0) {
+        await pool.query(
+            `INSERT INTO profiles (user_id, name, experience_level)
+            VALUES ($1, $2, $3)`,
+            [user.rows[0].id, user.rows[0].nume, 'Începător']
+        );
+        }
+
         // Dacă totul e ok, trimitem datele utilizatorului înapoi
         res.json({ success: true, user: user.rows[0] });
     } catch (err) {
         console.error(err.message);
         res.status(500).send("Eroare server");
     }
+});
+
+app.get('/api/profile/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const result = await pool.query(
+    'SELECT * FROM profiles WHERE user_id = $1',
+    [userId]
+  );
+  res.json(result.rows[0] || null);
+});
+
+app.put('/api/profile/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, location, bio, experience_level } = req.body;
+
+    await pool.query(
+      `UPDATE profiles
+       SET name = $1,
+           location = $2,
+           bio = $3,
+           experience_level = $4
+       WHERE user_id = $5`,
+      [name, location, bio, experience_level, userId]
+    );
+
+    res.json({ message: 'Profil salvat' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Eroare server' });
+  }
+});
+
+
+app.post('/api/profile/avatar/:userId', upload.single('avatar'), async (req, res) => {
+  const { userId } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'Fișier lipsă' });
+  }
+
+  const avatarUrl = req.file.path.replace(/\\/g, '/');
+
+  const result = await pool.query(
+    'UPDATE profiles SET avatar_url=$1 WHERE user_id=$2 RETURNING *',
+    [avatarUrl, userId]
+  );
+
+  res.json(result.rows[0]);
 });

@@ -1,0 +1,47 @@
+<h2 *ngIf="user">
+  Profilul lui {{ user.nume }}
+</h2>
+
+<p>
+  Nivel de experiență:
+  <strong>{{ profile.experience_level }}</strong>
+</p>
+
+<hr>
+
+<!-- AVATAR -->
+<div>
+  <img
+    *ngIf="profile.avatar_url"
+    [src]="'http://localhost:5000/' + profile.avatar_url"
+    width="150"
+    height="150"
+    style="border-radius:50%; object-fit:cover; border:1px solid #ccc"
+  >
+
+  <p *ngIf="!profile.avatar_url">
+    Nu ai avatar încă
+  </p>
+
+  <input type="file" (change)="onAvatarSelected($event)">
+</div>
+
+<hr>
+
+<label>
+  Locație:
+  <input type="text" [(ngModel)]="profile.location">
+</label>
+
+<br><br>
+
+<label>
+  Descriere:
+  <textarea [(ngModel)]="profile.bio"></textarea>
+</label>
+
+<br><br>
+
+<button (click)="saveProfile()">
+  Salvează profil
+</button>

@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-// Asigură-te că calea este corectă (uneori e fishing.service)
 import { FishingService } from '../../services/fishing'; 
 
 @Component({

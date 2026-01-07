@@ -35,4 +35,27 @@ export class FishingService {
     // Trimitem userId ca parametru în URL (?userId=...)
     return this.http.get<any[]>(`${this.apiUrl}/capturi?userId=${userId}`);
   }
+
+  getCapturiUser(userId: number) {
+    return this.http.get<any[]>(`${this.apiUrl}/capturi?userId=${userId}`);
+  }
+
+  getProfile(userId: number) {
+    return this.http.get<any>(`${this.apiUrl}/profile/${userId}`);
+  }
+
+  updateProfile(userId: number, profile: any) {
+    return this.http.put(`${this.apiUrl}/profile/${userId}`, profile);
+  }
+
+  uploadAvatar(userId: number, file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    return this.http.post<any>(
+      `${this.apiUrl}/profile/avatar/${userId}`,
+      formData
+    );
+  }
+
 }
