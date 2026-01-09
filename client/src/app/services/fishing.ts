@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FishingService {
-  private apiUrl = 'http://localhost:5000/api'; // Am scos '/capturi' ca să fie baza
+  private apiUrl = 'http://localhost:5000/api';
 
   constructor(private http: HttpClient) { }
 

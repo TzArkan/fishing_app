@@ -114,9 +114,7 @@ app.put('/api/capturi/:id', async (req, res) => {
     }
 });
 // Pornire server
-app.listen(port, () => {
-    console.log(`Serverul backend rulează pe portul ${port}`);
-});
+app.listen(5000, '0.0.0.0', () => { console.log("Server running on port 5000"); });
 
 // --- RUTE DE AUTENTIFICARE ---
 // 1. REGISTER (Înregistrare utilizator nou)
@@ -228,7 +226,7 @@ app.put('/api/profile/:userId', async (req, res) => {
     await pool.query(
       `UPDATE profiles
        SET location = $1,
-           bio = $2,
+           bio = $2
        WHERE user_id = $3`,
       [location, bio, userId]
     );
