@@ -197,9 +197,9 @@ app.post('/api/login', async (req, res) => {
 
         if (profileCheck.rows.length === 0) {
         await pool.query(
-            `INSERT INTO profiles (user_id, name, experience_level)
-            VALUES ($1, $2, $3)`,
-            [user.rows[0].id, user.rows[0].nume, 'Începător']
+            `INSERT INTO profiles (user_id)
+            VALUES ($1)`,
+            [user.rows[0].id]
         );
         }
 
@@ -223,16 +223,14 @@ app.get('/api/profile/:userId', async (req, res) => {
 app.put('/api/profile/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, location, bio, experience_level } = req.body;
+    const { location, bio } = req.body;
 
     await pool.query(
       `UPDATE profiles
-       SET name = $1,
-           location = $2,
-           bio = $3,
-           experience_level = $4
-       WHERE user_id = $5`,
-      [name, location, bio, experience_level, userId]
+       SET location = $1,
+           bio = $2,
+       WHERE user_id = $3`,
+      [location, bio, userId]
     );
 
     res.json({ message: 'Profil salvat' });

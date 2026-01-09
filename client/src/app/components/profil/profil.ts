@@ -22,13 +22,11 @@ export class ProfilComponent implements OnInit {
     location: string;
     bio: string;
     avatar_url: string | null;
-    experience_level: string;
   } = {
     name: '',
     location: '',
     bio: '',
     avatar_url: null,
-    experience_level: ''
   };
 
 
@@ -39,6 +37,7 @@ export class ProfilComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    
     if (isPlatformBrowser(this.platformId)) {
       const storedUser = localStorage.getItem('user');
       if (!storedUser) return;
@@ -48,9 +47,9 @@ export class ProfilComponent implements OnInit {
       // experiență
       this.service.getCapturiUser(this.user.id).subscribe(capturi => {
         const c = capturi.length;
-        if (c < 5) this.profile.experience_level = 'Începător';
-          else if (c < 15) this.profile.experience_level = 'Avansat';
-            else this.profile.experience_level = 'Expert';
+        if (c < 5) this.experienceLevel = 'Începător';
+          else if (c < 15) this.experienceLevel = 'Avansat';
+            else this.experienceLevel = 'Expert';
 
       });
 
