@@ -1,1 +1,52 @@
-<p>register works!</p>
+<div class="page-wrapper">
+  <div class="glass-card">
+    
+    <div class="header">
+      <div class="icon-circle">📝</div>
+      <h2>Înregistrare</h2>
+      <p>Începe aventura ta de pescar</p>
+    </div>
+
+    <div class="form-group">
+      <label>Numele Tău</label>
+      <input 
+        type="text" 
+        [(ngModel)]="nume" 
+        (keyup.enter)="onRegister()"
+        placeholder="Ex: Ion Pescarul" 
+        class="modern-input"
+      >
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input 
+        type="email" 
+        [(ngModel)]="email" 
+        (keyup.enter)="onRegister()"
+        placeholder="email@exemplu.ro" 
+        class="modern-input"
+      >
+    </div>
+
+    <div class="form-group">
+      <label>Parolă</label>
+      <input 
+        type="password" 
+        [(ngModel)]="password" 
+        (keyup.enter)="onRegister()"
+        placeholder="••••••" 
+        class="modern-input"
+      >
+    </div>
+
+    <button (click)="onRegister()" class="btn-nature">
+      Creează Cont
+    </button>
+
+    <div class="footer-link">
+      Ai deja cont? <a routerLink="/login">Loghează-te aici</a>
+    </div>
+
+  </div>
+</div>

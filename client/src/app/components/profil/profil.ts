@@ -61,9 +61,24 @@ export class ProfilComponent implements OnInit {
   }
 
   saveProfile() {
-    this.service.updateProfile(this.user.id, this.profile).subscribe({
-      next: () => alert('Profil salvat!'),
-      error: () => alert('Eroare la salvare profil')
+    // Împachetăm toate datele: numele din user + detaliile din profil
+    const dataToSend = {
+      nume: this.user.nume,       // <--- Trimitem numele modificat
+      location: this.profile.location,
+      bio: this.profile.bio
+    };
+
+    this.service.updateProfile(this.user.id, dataToSend).subscribe({
+      next: () => {
+        alert('Profil salvat cu succes! ✅');
+        
+        // FOARTE IMPORTANT: Actualizăm userul în localStorage ca să țină minte noul nume la refresh
+        localStorage.setItem('user', JSON.stringify(this.user));
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Eroare la salvare.');
+      }
     });
   }
   

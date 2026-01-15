@@ -1,119 +1,100 @@
-/* Containerul Principal - Cardul Alb */
-.add-catch-container {
-  max-width: 600px; /* Lățimea maximă a formularului */
-  margin: 40px auto; /* Centrat orizontal și spațiu sus/jos */
-  background-color: #ffffff;
-  padding: 40px;
-  border-radius: 15px; /* Colțuri rotunjite */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Umbră modernă */
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* --- FUNDAL COMUN (Natură) --- */
+.page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
 }
 
-/* Titlul */
+/* Strat întunecat */
+.page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 0;
+}
+
+/* --- CARDUL DE STICLĂ --- */
+.glass-card { /* Înlocuiește clasa veche .add-catch-container */
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9); /* Mai opac ca să se vadă scrisul */
+  backdrop-filter: blur(12px);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 600px;
+  font-family: 'Poppins', sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
 h2 {
   text-align: center;
-  color: #2c3e50; /* Gri închis */
-  font-size: 2rem;
-  margin-bottom: 30px;
-  border-bottom: 2px solid #f0f2f5;
-  padding-bottom: 15px;
-}
-
-/* Grupurile de câmpuri */
-.form-group {
+  color: #2c3e50;
   margin-bottom: 25px;
+  font-weight: 600;
 }
 
-/* Etichetele (Specie, Lungime, etc) */
+/* INPUT-URI MODERNE */
+.form-group {
+  margin-bottom: 20px;
+}
+
 label {
   display: block;
   font-weight: 600;
   color: #555;
   margin-bottom: 8px;
-  font-size: 0.95rem;
+  margin-left: 5px;
 }
 
-/* Câmpurile de text (Input-urile) */
-.form-control {
+.form-control, .custom-select {
   width: 100%;
   padding: 14px;
   border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 16px;
-  color: #333;
-  box-sizing: border-box; /* Asigură că padding-ul nu lățește input-ul */
+  border-radius: 12px;
+  background: #fdfdfd;
+  font-size: 1rem;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
-/* Când dai click în căsuță (Focus) */
-.form-control:focus {
-  border-color: #3498db; /* Albastru când scrii */
-  box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+.form-control:focus, .custom-select:focus {
+  border-color: #27ae60;
+  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
   outline: none;
 }
 
-/* Zona de text mare (Detalii) */
 textarea.form-control {
-  min-height: 120px;
-  resize: vertical; /* Permite redimensionarea doar pe înălțime */
-  line-height: 1.5;
+  min-height: 100px;
+  resize: vertical;
 }
 
-/* Input-ul pentru fișiere */
-.form-control-file {
-  display: block;
-  width: 100%;
-  padding: 10px 0;
-  font-size: 15px;
-  color: #666;
-  cursor: pointer;
-}
-
-/* Butonul de Salvare */
+/* BUTON VERDE NATURĂ */
 .btn-save {
   width: 100%;
-  background-color: #27ae60; /* Verde intens */
-  color: white;
   padding: 16px;
-  font-size: 18px;
-  font-weight: bold;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
-  margin-top: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 15px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-/* Efecte pe buton */
 .btn-save:hover {
-  background-color: #219150; /* Verde mai închis la mouse over */
-}
-
-.btn-save:active {
-  transform: scale(0.98); /* Mic efect de apăsare */
-}
-
-/* Responsive - Pe telefoane */
-@media (max-width: 600px) {
-  .add-catch-container {
-    padding: 20px;
-    margin: 20px 10px;
-    width: auto;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
-}
-
-/* Stil pentru Dropdown (Select) */
-select.form-control {
-  appearance: none; /* Ascunde săgeata default urâtă a browserului */
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px top 50%;
-  background-size: 12px auto;
-  cursor: pointer;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
 }

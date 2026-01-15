@@ -1,48 +1,55 @@
-<h2 *ngIf="user">
-  Profilul lui {{ user.nume }}
-</h2>
+<div class="page-wrapper"><div class="glass-card">
+<div class="profile-container">
+  <div class="profile-card">
+    
+    <div class="avatar-wrapper">
+      <img 
+        *ngIf="profile.avatar_url" 
+        [src]="'http://localhost:5000/' + profile.avatar_url" 
+        class="avatar-img"
+        alt="Avatar"
+      >
+      
+      <img 
+        *ngIf="!profile.avatar_url" 
+        src="https://via.placeholder.com/150?text=Fara+Poza" 
+        class="avatar-img"
+        alt="No Avatar"
+      >
 
-<p>
-  Nivel de experiență:
-  <strong>{{ experienceLevel }}</strong>
-</p>
+      <div style="margin-top: 10px;">
+        <label for="file-upload" style="cursor: pointer; color: #28a745; font-weight: bold;">
+          📷 Schimbă poza
+        </label>
+        <input id="file-upload" type="file" (change)="onAvatarSelected($event)" style="display: none;">
+      </div>
+    </div>
 
+    <div class="form-group">
+      <label>Numele Tău</label>
+      <input type="text" [(ngModel)]="user.nume" class="form-control" style="font-weight: bold; text-align: center; font-size: 1.2rem;">
+    </div>
+    
+    <p class="profile-level">
+      Nivel experiență: <strong>{{ experienceLevel }}</strong>
+    </p>
 
-<hr>
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-<!-- AVATAR -->
-<div>
-  <img
-    *ngIf="profile.avatar_url"
-    [src]="'http://localhost:5000/' + profile.avatar_url"
-    width="150"
-    height="150"
-    style="border-radius:50%; object-fit:cover; border:1px solid #ccc"
-  >
+    <div class="form-group">
+      <label>Locație</label>
+      <input type="text" [(ngModel)]="profile.location" placeholder="Ex: Tulcea, Delta Dunării">
+    </div>
 
-  <p *ngIf="!profile.avatar_url">
-    Nu ai avatar încă
-  </p>
+    <div class="form-group">
+      <label>Descriere (Bio)</label>
+      <textarea [(ngModel)]="profile.bio" placeholder="Spune câteva cuvinte despre tine..."></textarea>
+    </div>
 
-  <input type="file" (change)="onAvatarSelected($event)">
+    <button class="btn-save" (click)="saveProfile()">
+      Salvează modificările
+    </button>
+
+  </div>
 </div>
-
-<hr>
-
-<label>
-  Locație:
-  <input type="text" [(ngModel)]="profile.location">
-</label>
-
-<br><br>
-
-<label>
-  Descriere:
-  <textarea [(ngModel)]="profile.bio"></textarea>
-</label>
-
-<br><br>
-
-<button (click)="saveProfile()">
-  Salvează profil
-</button>
+</div></div>

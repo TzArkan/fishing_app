@@ -1,39 +1,147 @@
-.auth-container {
+/* Fundalul paginii - Imagine cu natură */
+.login-wrapper {
+  height: 100vh; /* Ocupă tot ecranul */
+  width: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 90vh;
-  background-color: #f0f2f5;
+  justify-content: center;
+  /* Imagine de fundal de pe Unsplash (lac/pădure) */
+  background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+  background-size: cover;
+  position: relative;
 }
 
-.auth-card {
-  background: white;
+/* Strat întunecat peste poză ca să se vadă scrisul */
+.login-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.3); /* 30% întuneric */
+  z-index: 1;
+}
+
+/* Cardul cu efect de sticlă (Glassmorphism) */
+.login-card {
+  position: relative;
+  z-index: 2; /* Peste stratul întunecat */
+  background: rgba(255, 255, 255, 0.85); /* Alb transparent */
+  backdrop-filter: blur(10px); /* Efect de ceață în spate */
   padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
   width: 100%;
   max-width: 400px;
   text-align: center;
+  font-family: 'Poppins', sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-h2 { margin-bottom: 25px; color: #333; }
-
-.form-group { margin-bottom: 15px; text-align: left; }
-label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-input { 
-  width: 100%; padding: 10px; 
-  border: 1px solid #ddd; border-radius: 5px; 
-  box-sizing: border-box;
+/* Header */
+.header h2 {
+  color: #2c3e50;
+  margin: 10px 0 5px;
+  font-weight: 600;
 }
 
-.btn-primary {
-  width: 100%; padding: 12px;
-  background-color: #007bff; color: white;
-  border: none; border-radius: 5px;
-  font-size: 16px; cursor: pointer;
+.header p {
+  color: #5d6d7e;
+  font-size: 0.9rem;
+  margin-bottom: 30px;
+}
+
+.icon-circle {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  /* Mică animație la plută */
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Input-uri moderne */
+.form-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: #34495e;
+  font-weight: 600;
+  margin-bottom: 5px;
+  margin-left: 5px;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  background: #f9f9f9;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box; /* IMPORTANT: Ca padding-ul să nu strice lățimea */
+}
+
+.modern-input:focus {
+  border-color: #27ae60; /* Verde natură */
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
+}
+
+/* Butonul Natură */
+.btn-nature {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  /* Gradient Verde Pădure */
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
   margin-top: 10px;
 }
-.btn-primary:hover { background-color: #0056b3; }
 
-.footer-link { margin-top: 20px; font-size: 14px; }
-.footer-link a { color: #007bff; text-decoration: none; }
+.btn-nature:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn-nature:active {
+  transform: scale(0.98);
+}
+
+/* Link-ul de jos */
+.footer-link {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.footer-link a {
+  color: #27ae60;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-link a:hover {
+  text-decoration: underline;
+}
+
+/* Animație plutitoare pentru iconiță */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Responsive pe telefon */
+@media (max-width: 500px) {
+  .login-card {
+    margin: 20px;
+    padding: 30px 20px;
+  }
+}

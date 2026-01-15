@@ -1,140 +1,115 @@
-.history-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+/* --- ACELAȘI FUNDAL GLOBAL --- */
+.page-wrapper {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
 }
 
+.page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Puțin mai întunecat pentru contrast */
+  z-index: 0;
+}
+
+/* Titlul paginii (trebuie să fie alb acum) */
 h2 {
+  position: relative;
+  z-index: 1;
   text-align: center;
-  color: #2c3e50;
-  margin-bottom: 30px;
-  font-size: 2rem;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  font-family: 'Poppins', sans-serif;
+  margin-bottom: 40px;
+  font-size: 2.5rem;
 }
 
-/* Grila care se adaptează automat */
+/* Grila */
 .capturi-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Stilul Cardului individual */
+/* --- CARDUL INDIVIDUAL DE CAPTURĂ (Glass Style) --- */
 .catch-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden; /* Ca imaginea să nu iasă din colțuri */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.95); /* Aproape opac */
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .catch-card:hover {
-  transform: translateY(-5px); /* Se ridică puțin când pui mouse-ul */
+  transform: translateY(-10px);
 }
 
-/* Imaginea */
 .card-image {
   height: 200px;
   width: 100%;
   overflow: hidden;
-  background-color: #eee;
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Umple spațiul fără să deformeze poza */
+  object-fit: cover;
+  transition: transform 0.5s;
 }
 
-/* Textul */
+.catch-card:hover .card-image img {
+  transform: scale(1.1); /* Zoom fin la hover */
+}
+
 .card-content {
   padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-content h3 {
-  margin: 0 0 10px 0;
-  color: #333;
-  font-size: 1.4rem;
+  color: #2c3e50;
+  margin: 0 0 10px;
+  font-size: 1.3rem;
 }
 
 .length {
-  font-weight: bold;
   color: #27ae60;
-  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
-.details {
-  color: #666;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-/* Mesajul când nu sunt date */
-.no-data {
-  text-align: center;
-  padding: 50px;
-  color: #7f8c8d;
-  font-size: 1.2rem;
-}
-/* ... păstrează stilurile vechi ... */
-
-/* Stil Butoane Card */
+/* Butoane Edit/Delete modernizate */
 .card-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
 }
 
 .btn-edit, .btn-delete {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.btn-edit { background-color: #f1c40f; color: #fff; }
-.btn-edit:hover { background-color: #f39c12; }
+.btn-edit { background: #f1c40f; color: #fff; }
+.btn-edit:hover { background: #f39c12; }
 
-.btn-delete { background-color: #e74c3c; color: #fff; }
-.btn-delete:hover { background-color: #c0392b; }
-
-/* --- STIL FEREASTRĂ EDITARE (MODAL) --- */
-.modal-overlay {
-    position: fixed; /* Fix pe tot ecranul */
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); /* Fundal întunecat transparent */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.modal-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    display: block;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
-.btn-save { background-color: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-.btn-cancel { background-color: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+.btn-delete { background: #e74c3c; color: #fff; }
+.btn-delete:hover { background: #c0392b; }

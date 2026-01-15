@@ -2,60 +2,67 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-// ... importurile existente ...
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class FishingService {
-  private apiUrl = 'http://localhost:5000/api';
+  
+  // AICI ESTE REZOLVAREA: Definim variabila ca proprietate a clasei
+  private baseUrl = 'http://localhost:5000/api';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  // Auth Methods
-  register(userObj: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userObj);
+  // --- AUTH ---
+  register(user: any) {
+    return this.http.post(`${this.baseUrl}/register`, user);
   }
 
-  stergeCaptura(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/capturi/${id}`);
+  login(user: any) {
+    return this.http.post<any>(`${this.baseUrl}/login`, user);
   }
 
-  editeazaCaptura(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/capturi/${id}`, data);
+  // --- CAPTURI ---
+  
+  // Adaugă o captură
+  addCaptura(formData: FormData) {
+    return this.http.post(`${this.baseUrl}/capturi`, formData);
   }
 
-  login(userObj: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, userObj);
+  // Ia toate capturile unui user
+  getCapturiUser(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/capturi?userId=${userId}`);
   }
 
-  adaugaCaptura(data: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/capturi`, data);
+  // Șterge captura
+  deleteCaptura(id: number) {
+    return this.http.delete(`${this.baseUrl}/capturi/${id}`);
   }
 
-  getCapturi(userId: number): Observable<any[]> {
-    // Trimitem userId ca parametru în URL (?userId=...)
-    return this.http.get<any[]>(`${this.apiUrl}/capturi?userId=${userId}`);
+  // --- METODELE NOI PENTRU EDITARE ---
+
+  // 1. Ia o singură captură (pentru a pre-completa formularul)
+  getCatchById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/capturi/single/${id}`);
   }
 
-  getCapturiUser(userId: number) {
-    return this.http.get<any[]>(`${this.apiUrl}/capturi?userId=${userId}`);
+  // 2. Actualizează captura (PUT)
+  updateCatch(id: number, data: any) {
+    return this.http.put(`${this.baseUrl}/capturi/${id}`, data);
   }
 
-  getProfile(userId: number) {
-    return this.http.get<any>(`${this.apiUrl}/profile/${userId}`);
+  // --- PROFIL ---
+  
+  getProfile(userId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/profile/${userId}`);
   }
 
-  updateProfile(userId: number, profile: any) {
-    return this.http.put(`${this.apiUrl}/profile/${userId}`, profile);
+  updateProfile(userId: number, data: any) {
+    return this.http.put(`${this.baseUrl}/profile/${userId}`, data);
   }
 
-  uploadAvatar(userId: number, file: File) {
+  uploadAvatar(userId: number, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('avatar', file);
-
-    return this.http.post<any>(
-      `${this.apiUrl}/profile/avatar/${userId}`,
-      formData
-    );
+    return this.http.post(`${this.baseUrl}/profile/avatar/${userId}`, formData);
   }
-
 }

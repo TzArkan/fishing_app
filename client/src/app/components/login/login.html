@@ -1,21 +1,39 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <h2>🔐 Login Fishing App</h2>
+<div class="login-wrapper">
+  <div class="login-card">
     
+    <div class="header">
+      <div class="icon-circle">🎣</div>
+      <h2>Bine ai venit!</h2>
+      <p>Loghează-te pentru a-ți vedea capturile</p>
+    </div>
+
     <div class="form-group">
       <label>Email</label>
-      <input type="email" [(ngModel)]="email" placeholder="pescar@exemplu.ro">
+      <input 
+        type="email" 
+        class="modern-input" 
+        [(ngModel)]="email" 
+        (keyup.enter)="onLogin()" 
+        placeholder="email@exemplu.ro"
+      >
     </div>
 
     <div class="form-group">
       <label>Parolă</label>
-      <input type="password" [(ngModel)]="password" placeholder="******">
+      <input 
+        type="password" 
+        class="modern-input" 
+        [(ngModel)]="password" 
+        (keyup.enter)="onLogin()" 
+        placeholder="••••••"
+      >
     </div>
 
-    <button (click)="onLogin()" class="btn-primary">Intră în cont</button>
+    <button class="btn-nature" (click)="onLogin()">Intră în cont</button>
 
     <div class="footer-link">
-      <p>Nu ai cont? <a routerLink="/register">Înregistrează-te aici</a></p>
+      Nu ai cont? <a routerLink="/register">Înregistrează-te</a>
     </div>
+
   </div>
 </div>

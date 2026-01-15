@@ -8,30 +8,10 @@ import { FishingService } from '../../services/fishing';
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <div class="auth-container">
-      <div class="auth-card">
-        <h2>📝 Înregistrare</h2>
-        <div class="form-group">
-          <label>Numele Tău</label>
-          <input type="text" [(ngModel)]="nume" placeholder="Ex: Ion Pescarul">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" [(ngModel)]="email">
-        </div>
-        <div class="form-group">
-          <label>Parolă</label>
-          <input type="password" [(ngModel)]="password">
-        </div>
-        <button (click)="onRegister()" class="btn-primary" style="background-color: #28a745;">Creează Cont</button>
-        <div class="footer-link">
-          <p>Ai deja cont? <a routerLink="/login">Loghează-te</a></p>
-        </div>
-      </div>
-    </div>
-  `,
-  styleUrls: ['../login/login.css'] // Folosim același CSS ca la login!
+  // AICI AM FĂCUT SCHIMBAREA:
+  // Acum îi spunem să citească fișierul extern, nu textul de aici
+  templateUrl: './register.html', 
+  styleUrls: ['./register.css']
 })
 export class RegisterComponent {
   nume = '';

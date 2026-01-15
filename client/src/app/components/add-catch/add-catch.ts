@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router'; // <--- Am adaugat Router pentru navigare
 import { FishingService } from '../../services/fishing'; 
 
 @Component({
   selector: 'app-add-catch',
   standalone: true,
   imports: [FormsModule, CommonModule],
-  templateUrl: './add-catch.html',
-  styleUrls: ['./add-catch.css']
+  templateUrl: './add-catch.html', // Asigura-te ca numele fisierului HTML e corect
+  styleUrls: ['./add-catch.css']   // Asigura-te ca numele fisierului CSS e corect
 })
 export class AddCatchComponent implements OnInit {
   // Lista predefinită de specii
@@ -24,10 +25,13 @@ export class AddCatchComponent implements OnInit {
   specie: string = ''; 
   lungime: number | null = null;
   detalii: string = '';
-  dataCapturii: string = ''; // <--- Variabila nouă pentru dată
+  dataCapturii: string = ''; 
   selectedFile: File | null = null;
 
-  constructor(private fishingService: FishingService) {}
+  constructor(
+    private fishingService: FishingService,
+    private router: Router // <--- Injectam Router-ul
+  ) {}
 
   // Se execută când se încarcă pagina
   ngOnInit(): void {
@@ -44,6 +48,7 @@ export class AddCatchComponent implements OnInit {
     const userString = localStorage.getItem('user');
     if (!userString) {
       alert("Nu ești logat! Te rog autentifică-te.");
+      this.router.navigate(['/login']); // <--- Te trimite la login daca nu esti logat
       return;
     }
     const user = JSON.parse(userString);
@@ -69,11 +74,11 @@ export class AddCatchComponent implements OnInit {
     // Trimitem și data aleasă
     formData.append('data_capturii', this.dataCapturii); 
     
-    // Coordonate default (0,0) - le poți reactiva pe viitor dacă repari harta
+    // Coordonate default
     formData.append('lat', '0');
     formData.append('lng', '0');
     
-    // Adăugăm ID-ul utilizatorului ca să știm a cui e captura
+    // Adăugăm ID-ul utilizatorului
     formData.append('user_id', user.id); 
 
     if (this.selectedFile) {
@@ -81,18 +86,16 @@ export class AddCatchComponent implements OnInit {
     }
 
     // 5. Trimiterea efectivă
-    this.fishingService.adaugaCaptura(formData).subscribe({
-      next: (res) => {
+    // CORECTAT: addCaptura (numele din service) în loc de adaugaCaptura
+    this.fishingService.addCaptura(formData).subscribe({
+      next: (res: any) => { // <--- CORECTAT: Am pus ": any"
+        console.log('Răspuns server:', res);
         alert('Captură adăugată cu succes! 🎣');
-        // Resetăm formularul ca să fie curat
-        this.specie = '';
-        this.lungime = null;
-        this.detalii = '';
-        this.selectedFile = null;
-        // Resetăm data la ziua de azi
-        this.dataCapturii = new Date().toISOString().split('T')[0];
+        
+        // Te trimitem la pagina de istoric să vezi captura
+        this.router.navigate(['/history']); 
       },
-      error: (err) => {
+      error: (err: any) => { // <--- CORECTAT: Am pus ": any"
         console.error(err);
         alert('Eroare la salvare. Verifică dacă serverul merge.');
       }
