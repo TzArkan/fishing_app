@@ -13,10 +13,16 @@ export class FishingService {
   constructor(private http: HttpClient) {}
 
   // --- AUTH ---
-  register(user: any) {
-    return this.http.post(`${this.baseUrl}/register`, user);
-  }
+  register(user: any, code: string) {
+ 
+  const payload = { ...user, code }; 
+  return this.http.post(`${this.baseUrl}/register`, payload);
+}
 
+sendVerificationCode(nume: string, email: string) {
+  // Trimitem obiectul { nume: "Ion", email: "ion@test.ro" }
+  return this.http.post(`${this.baseUrl}/send-code`, { nume, email });
+}
   login(user: any) {
     return this.http.post<any>(`${this.baseUrl}/login`, user);
   }

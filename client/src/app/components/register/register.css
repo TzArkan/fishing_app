@@ -1,5 +1,6 @@
 /* --- FUNDAL GLOBAL (Lac în ceață) --- */
-.page-wrapper {
+/* Am adăugat .register-wrapper ca să preia stilul paginii tale */
+.page-wrapper, .register-wrapper {
   min-height: 100vh;
   width: 100%;
   display: flex;
@@ -13,7 +14,7 @@
 }
 
 /* Strat întunecat peste poză */
-.page-wrapper::before {
+.page-wrapper::before, .register-wrapper::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -22,7 +23,8 @@
 }
 
 /* --- CARD DE STICLĂ --- */
-.glass-card {
+/* Am adăugat .register-card pentru noul HTML */
+.glass-card, .register-card {
   position: relative;
   z-index: 1;
   background: rgba(255, 255, 255, 0.85); /* Alb lăptos */
@@ -39,9 +41,9 @@
 }
 
 /* Header */
-.header h2 {
+.header h2, .register-card h2 {
   color: #2c3e50;
-  margin: 10px 0 5px;
+  margin: 10px 0 15px;
   font-weight: 700;
 }
 
@@ -71,7 +73,8 @@
   margin-left: 5px;
 }
 
-.modern-input {
+/* Am adăugat input-urile din register-card să arate la fel */
+.modern-input, .register-card input {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
@@ -82,15 +85,17 @@
   box-sizing: border-box;
 }
 
-.modern-input:focus {
+.modern-input:focus, .register-card input:focus {
   border-color: #27ae60;
   background: #fff;
   outline: none;
   box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
 }
 
-/* Butonul Verde */
-.btn-nature {
+/* --- BUTOANE --- */
+
+/* Butonul Verde Principal (Send Code & Finalize) */
+.btn-nature, .btn-primary, .btn-success {
   width: 100%;
   padding: 15px;
   border: none;
@@ -104,26 +109,64 @@
   margin-top: 10px;
 }
 
-.btn-nature:hover {
+.btn-nature:hover, .btn-primary:hover, .btn-success:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
 }
 
+/* Butonul Gri (Înapoi) - NOU ADĂUGAT */
+.btn-secondary {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #95a5a6; /* Gri neutru */
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.btn-secondary:hover {
+  background: #7f8c8d;
+}
+
+/* Starea Disabled (Când se încarcă) - NOU ADĂUGAT */
+button:disabled {
+  background: #bdc3c7 !important; /* Gri deschis */
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* Link Footer */
-.footer-link {
+.footer-link, .register-card p a {
   margin-top: 20px;
   font-size: 0.9rem;
   color: #7f8c8d;
 }
 
-.footer-link a {
+.footer-link a, .register-card a {
   color: #27ae60;
   text-decoration: none;
   font-weight: 600;
 }
 
-.footer-link a:hover {
+.footer-link a:hover, .register-card a:hover {
   text-decoration: underline;
+}
+
+/* Mesaje de Eroare - NOU ADĂUGAT */
+.error-msg {
+  color: #e74c3c; /* Roșu */
+  background: rgba(231, 76, 60, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(231, 76, 60, 0.2);
 }
 
 /* Animație de intrare */
