@@ -1,72 +1,88 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs'; // <--- 1. IMPORT IMPORTANT: 'of'
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FishingService {
   
-  // AICI ESTE REZOLVAREA: Definim variabila ca proprietate a clasei
   private baseUrl = 'http://localhost:5000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object 
+  ) {}
 
   // --- AUTH ---
   register(user: any, code: string) {
- 
-  const payload = { ...user, code }; 
-  return this.http.post(`${this.baseUrl}/register`, payload);
-}
+    const payload = { ...user, code }; 
+    return this.http.post(`${this.baseUrl}/register`, payload);
+  }
 
-sendVerificationCode(nume: string, email: string) {
-  // Trimitem obiectul { nume: "Ion", email: "ion@test.ro" }
-  return this.http.post(`${this.baseUrl}/send-code`, { nume, email });
-}
+  sendVerificationCode(nume: string, email: string) {
+    return this.http.post(`${this.baseUrl}/send-code`, { nume, email });
+  }
+
   login(user: any) {
     return this.http.post<any>(`${this.baseUrl}/login`, user);
   }
 
+  getFeed(): Observable<any> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return of([]); 
+    }
+    let userId = 0;
+    const stored = localStorage.getItem('userId');
+    if (stored) {
+        userId = +stored;
+    }
+    const timestamp = Date.now(); 
+    
+    return this.http.get(`${this.baseUrl}/feed?userId=${userId}&ts=${timestamp}`);
+  }
+
+  // --- LIKE SYSTEM ---
+  toggleLike(capturaId: number, userId: number) {
+    return this.http.post(`${this.baseUrl}/capturi/${capturaId}/like`, { userId });
+  }
+
+  // --- COMMENT SYSTEM ---
+  addComment(capturaId: number, userId: number, text: string) {
+    return this.http.post(`${this.baseUrl}/capturi/${capturaId}/comments`, { userId, text });
+  }
+
+  // --- CAPTURI ---
   publishCaptura(id: number) {
-    // Apelăm ruta PUT creată în server
     return this.http.put(`${this.baseUrl}/capturi/${id}/publish`, {});
   }
 
-  getFeed() {
-    return this.http.get(`${this.baseUrl}/feed`);
-  }
-  // --- CAPTURI ---
-  
-  // Adaugă o captură
   addCaptura(formData: FormData) {
     return this.http.post(`${this.baseUrl}/capturi`, formData);
   }
 
-  // Ia toate capturile unui user
   getCapturiUser(userId: number): Observable<any[]> {
+    // Putem proteja și aici, opțional, dar Feed-ul era cel critic
+    if (!isPlatformBrowser(this.platformId)) return of([]);
     return this.http.get<any[]>(`${this.baseUrl}/capturi?userId=${userId}`);
   }
 
-  // Șterge captura
   deleteCaptura(id: number) {
     return this.http.delete(`${this.baseUrl}/capturi/${id}`);
   }
 
-  // --- METODELE NOI PENTRU EDITARE ---
-
-  // 1. Ia o singură captură (pentru a pre-completa formularul)
   getCatchById(id: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/capturi/single/${id}`);
   }
 
-  // 2. Actualizează captura (PUT)
   updateCatch(id: number, data: any) {
     return this.http.put(`${this.baseUrl}/capturi/${id}`, data);
   }
 
   // --- PROFIL ---
-  
   getProfile(userId: number): Observable<any> {
+    if (!isPlatformBrowser(this.platformId)) return of(null);
     return this.http.get(`${this.baseUrl}/profile/${userId}`);
   }
 

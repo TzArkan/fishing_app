@@ -10,8 +10,10 @@
     
     <div class="card-header">
       <img [src]="getAvatar(post.pescar_avatar)" class="user-avatar">
-      <span class="username">{{ post.pescar_nume }}</span>
-      <span class="date">{{ post.created_at | date:'shortDate' }}</span>
+      <div class="header-info">
+        <span class="username">{{ post.pescar_nume }}</span>
+        <span class="date">{{ post.created_at | date:'shortDate' }}</span>
+      </div>
     </div>
 
     <div class="card-image">
@@ -19,9 +21,22 @@
     </div>
 
     <div class="card-footer">
+      
       <div class="actions">
-        <button class="btn-icon">❤️ {{ post.like_count || 0 }}</button>
-        <button class="btn-icon">💬 {{ post.comment_count || 0 }}</button>
+        <button type="button" 
+                class="btn-icon" 
+                [class.liked]="post.liked_by_current_user"
+                (click)="toggleLike(post)">
+          <span *ngIf="post.liked_by_current_user">❤️</span>
+          <span *ngIf="!post.liked_by_current_user">🤍</span>
+          {{ post.likes_count || 0 }}
+        </button>
+
+        <button type="button" 
+                class="btn-icon" 
+                (click)="post.showComments = !post.showComments">
+          💬 {{ post.comments_count || 0 }}
+        </button>
       </div>
 
       <div class="details">
@@ -30,8 +45,36 @@
           <span class="highlight">{{ post.specie }}</span> de 
           <span class="highlight">{{ post.lungime }} cm</span>!
         </p>
+        
+        <p *ngIf="post.tags && post.tags.length > 0" class="tags">
+            {{ formatTags(post.tags) }}
+        </p>
+
         <p class="description">{{ post.detalii }}</p>
       </div>
+
+      <div class="comments-section" *ngIf="post.showComments">
+        <hr>
+        
+        <div class="comments-list" *ngIf="post.comments && post.comments.length > 0">
+            <div *ngFor="let comment of post.comments" class="single-comment">
+                <strong>{{ comment.user_name }}:</strong> {{ comment.text }}
+            </div>
+        </div>
+        <div *ngIf="!post.comments || post.comments.length === 0" class="no-comments">
+            <small>Fii primul care comentează!</small>
+        </div>
+
+        <div class="add-comment">
+            <input type="text" 
+                   [(ngModel)]="post.newCommentText" 
+                   placeholder="Scrie un comentariu..."
+                   (keyup.enter)="submitComment(post)">
+            
+            <button type="button" (click)="submitComment(post)">Trimite</button>
+        </div>
+      </div>
+
     </div>
 
   </div>

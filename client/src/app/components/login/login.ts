@@ -18,27 +18,30 @@ export class LoginComponent {
   constructor(private fishingService: FishingService, private router: Router) {}
 
   onLogin() {
-  const credentials = { email: this.email, password: this.password };
+    const credentials = { email: this.email, password: this.password };
 
-  this.fishingService.login(credentials).subscribe({
-    next: (response: any) => {
-      // 1. SALVĂM USERUL PENTRU PROFIL
-      // Profilul tău așteaptă cheia 'user' și se așteaptă să găsească 'id' în ea.
-      if (response.user) {
-        localStorage.setItem('user', JSON.stringify(response.user));
-      }
-      
-      // 2. SALVĂM TOKENUL (dacă există)
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-      }
+    this.fishingService.login(credentials).subscribe({
+      next: (response: any) => {
+        // 1. SALVĂM USERUL PENTRU PROFIL
+        if (response.user) {
+          localStorage.setItem('user', JSON.stringify(response.user));
+          
+          // ---> AICI ERA PROBLEMA: TREBUIE SĂ SALVĂM ID-UL SEPARAT <---
+          // Feed-ul caută specific cheia 'userId'
+          localStorage.setItem('userId', response.user.id); 
+        }
+        
+        // 2. SALVĂM TOKENUL
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
 
-      // 3. ACUM PUTEM PLECA SPRE FEED
-      this.router.navigate(['/feed']);
-    },
-    error: (err) => {
-      alert(err.error?.message || "Eroare la logare");
-    }
-  });
-}
+        // 3. NAVIGARE
+        this.router.navigate(['/feed']);
+      },
+      error: (err) => {
+        alert(err.error?.message || "Eroare la logare");
+      }
+    });
+  }
 }

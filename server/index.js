@@ -104,6 +104,39 @@ app.post('/api/capturi', upload.single('poza'), async (req, res) => {
     }
 });
 
+
+app.post('/api/capturi/:id/comments', async (req, res) => {
+    try {
+        const { id } = req.params; // ID-ul capturii
+        // Angular trimite { userId, text }
+        const { userId, text } = req.body; 
+
+        if (!text || !userId) {
+            return res.status(400).json({ message: "Textul si UserID sunt obligatorii" });
+        }
+
+        // Inserăm comentariul
+        const newComment = await pool.query(
+            "INSERT INTO comments (captura_id, user_id, text) VALUES ($1, $2, $3) RETURNING *",
+            [id, userId, text]
+        );
+
+        // Luăm numele utilizatorului ca să îl trimitem înapoi (să apară frumos în feed instant)
+        const userDetails = await pool.query("SELECT nume FROM users WHERE id = $1", [userId]);
+        
+        const commentResponse = {
+            ...newComment.rows[0],
+            user_name: userDetails.rows[0]?.nume || "Anonim"
+        };
+
+        res.json(commentResponse);
+
+    } catch (err) {
+        console.error("Eroare comment:", err);
+        res.status(500).send("Eroare server");
+    }
+});
+
 app.get('/api/capturi', async (req, res) => {
     try {
         const { userId } = req.query; 
@@ -328,16 +361,56 @@ app.put('/api/capturi/:id/publish', async (req, res) => {
     }
 });
 
+// --- RUTA MODIFICATĂ: GET FEED (Include Like-uri, Comentarii, Tag-uri) ---
 app.get('/api/feed', async (req, res) => {
     try {
-        // Query complex care leagă toate tabelele
+        const userId = req.query.userId || 0; // Luăm ID-ul utilizatorului logat (dacă există) pentru a verifica "liked_by_current_user"
+
         const feedQuery = `
             SELECT 
-                c.id, c.specie, c.lungime, c.detalii, c.poza_url, c.created_at,
+                c.id, 
+                c.specie, 
+                c.lungime, 
+                c.detalii, 
+                c.poza_url, 
+                c.created_at,
                 u.nume as pescar_nume,
                 p.avatar_url as pescar_avatar,
-                (SELECT COUNT(*) FROM likes WHERE captura_id = c.id) as like_count,
-                (SELECT COUNT(*) FROM comments WHERE captura_id = c.id) as comment_count
+                
+                -- Număr Like-uri
+                (SELECT COUNT(*) FROM likes WHERE captura_id = c.id)::int as likes_count,
+                
+                -- Verificăm dacă userul curent a dat like (TRUE/FALSE)
+                EXISTS(SELECT 1 FROM likes WHERE captura_id = c.id AND user_id = $1) as liked_by_current_user,
+                
+                -- Număr Comentarii
+                (SELECT COUNT(*) FROM comments WHERE captura_id = c.id)::int as comments_count,
+
+                -- Lista Comentariilor (JSON array)
+                COALESCE(
+                    (SELECT json_agg(json_build_object(
+                        'id', com.id,
+                        'text', com.text,
+                        'user_name', cu.nume,
+                        'user_avatar', cp.avatar_url,
+                        'created_at', com.created_at
+                    ) ORDER BY com.created_at ASC)
+                    FROM comments com
+                    JOIN users cu ON com.user_id = cu.id
+                    LEFT JOIN profiles cp ON cu.id = cp.user_id
+                    WHERE com.captura_id = c.id
+                    ), '[]'
+                ) as comments,
+
+                -- Lista Tag-urilor (JSON array) - folosind tabela de legătură catch_tags
+                COALESCE(
+                    (SELECT json_agg(json_build_object('id', t.id, 'name', t.name))
+                     FROM catch_tags ct
+                     JOIN tags t ON ct.tag_id = t.id
+                     WHERE ct.captura_id = c.id
+                    ), '[]'
+                ) as tags
+
             FROM capturi c
             JOIN users u ON c.user_id = u.id
             LEFT JOIN profiles p ON u.id = p.user_id
@@ -345,18 +418,24 @@ app.get('/api/feed', async (req, res) => {
             ORDER BY c.created_at DESC
         `;
         
-        const result = await pool.query(feedQuery);
+        const result = await pool.query(feedQuery, [userId]);
         res.json(result.rows);
+
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Eroare server");
+        console.error("Eroare feed:", err);
+        res.status(500).send("Eroare server la feed");
     }
 });
 
 app.post('/api/capturi/:id/like', async (req, res) => {
     try {
-        const { user_id } = req.body; // Userul care dă like
-        const { id } = req.params;    // Captura apreciată
+        // FIX: Citim userId (trimis de Angular) SAU user_id (dacă vine din altă parte)
+        const user_id = req.body.userId || req.body.user_id; 
+        const { id } = req.params;
+
+        if (!user_id) {
+            return res.status(400).json({ message: "Lipseste ID-ul utilizatorului!" });
+        }
 
         // Verificăm dacă are deja like
         const check = await pool.query("SELECT * FROM likes WHERE user_id = $1 AND captura_id = $2", [user_id, id]);
@@ -371,7 +450,7 @@ app.post('/api/capturi/:id/like', async (req, res) => {
             res.json({ message: "Like", status: 'added' });
         }
     } catch (err) {
-        console.error(err);
+        console.error("Eroare like:", err);
         res.status(500).send("Eroare server");
     }
 });

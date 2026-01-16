@@ -164,3 +164,99 @@
   color: #555;
   margin-top: 50px;
 }
+
+/* --- SECȚIUNEA DE COMENTARII --- */
+.comments-section {
+    background-color: #f8f9fa; /* Gri foarte deschis */
+    padding: 15px;
+    border-top: 1px solid #e9ecef;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Linia de separare subtilă */
+hr {
+    border: 0;
+    border-top: 1px solid #dee2e6;
+    margin-bottom: 15px;
+}
+
+/* --- LISTA DE COMENTARII --- */
+.comments-list {
+    max-height: 300px; /* Dacă sunt multe, facem scroll */
+    overflow-y: auto;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.single-comment {
+    background: white;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border-bottom-left-radius: 2px; /* Efect vizual de "bulă de chat" */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+.single-comment strong {
+    color: #0077b6; /* Albastru marin pentru nume */
+    margin-right: 6px;
+    font-weight: 600;
+}
+
+.no-comments {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    padding: 10px;
+}
+
+/* --- INPUT PENTRU ADĂUGARE COMENTARIU --- */
+.add-comment {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: white;
+    padding: 5px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    transition: border-color 0.3s;
+}
+
+.add-comment:focus-within {
+    border-color: #0077b6;
+    box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+}
+
+.add-comment input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+}
+
+.add-comment button {
+    background-color: #0077b6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.add-comment button:hover {
+    background-color: #023e8a;
+}
