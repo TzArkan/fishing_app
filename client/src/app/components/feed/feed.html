@@ -1,0 +1,38 @@
+<div class="feed-container">
+  
+  <h2 class="feed-title">🎣 Comunitatea Pescarilor</h2>
+
+  <div *ngIf="posts.length === 0" class="no-posts">
+    <p>Încă nu a postat nimeni. Fii tu primul!</p>
+  </div>
+
+  <div *ngFor="let post of posts" class="feed-card">
+    
+    <div class="card-header">
+      <img [src]="getAvatar(post.pescar_avatar)" class="user-avatar">
+      <span class="username">{{ post.pescar_nume }}</span>
+      <span class="date">{{ post.created_at | date:'shortDate' }}</span>
+    </div>
+
+    <div class="card-image">
+      <img [src]="getSanitizedUrl(post.poza_url)" alt="Captură">
+    </div>
+
+    <div class="card-footer">
+      <div class="actions">
+        <button class="btn-icon">❤️ {{ post.like_count || 0 }}</button>
+        <button class="btn-icon">💬 {{ post.comment_count || 0 }}</button>
+      </div>
+
+      <div class="details">
+        <p>
+          <strong>{{ post.pescar_nume }}</strong> a prins un 
+          <span class="highlight">{{ post.specie }}</span> de 
+          <span class="highlight">{{ post.lungime }} cm</span>!
+        </p>
+        <p class="description">{{ post.detalii }}</p>
+      </div>
+    </div>
+
+  </div>
+</div>

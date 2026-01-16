@@ -317,6 +317,65 @@ app.get('/api/profile/:userId', async (req, res) => {
   res.json(result.rows[0] || null);
 });
 
+app.put('/api/capturi/:id/publish', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query("UPDATE capturi SET is_public = TRUE WHERE id = $1", [id]);
+        res.json({ message: "Captura a fost postată în Feed!" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Eroare server");
+    }
+});
+
+app.get('/api/feed', async (req, res) => {
+    try {
+        // Query complex care leagă toate tabelele
+        const feedQuery = `
+            SELECT 
+                c.id, c.specie, c.lungime, c.detalii, c.poza_url, c.created_at,
+                u.nume as pescar_nume,
+                p.avatar_url as pescar_avatar,
+                (SELECT COUNT(*) FROM likes WHERE captura_id = c.id) as like_count,
+                (SELECT COUNT(*) FROM comments WHERE captura_id = c.id) as comment_count
+            FROM capturi c
+            JOIN users u ON c.user_id = u.id
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE c.is_public = TRUE
+            ORDER BY c.created_at DESC
+        `;
+        
+        const result = await pool.query(feedQuery);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Eroare server");
+    }
+});
+
+app.post('/api/capturi/:id/like', async (req, res) => {
+    try {
+        const { user_id } = req.body; // Userul care dă like
+        const { id } = req.params;    // Captura apreciată
+
+        // Verificăm dacă are deja like
+        const check = await pool.query("SELECT * FROM likes WHERE user_id = $1 AND captura_id = $2", [user_id, id]);
+
+        if (check.rows.length > 0) {
+            // Dacă are, îl ștergem (Dislike)
+            await pool.query("DELETE FROM likes WHERE user_id = $1 AND captura_id = $2", [user_id, id]);
+            res.json({ message: "Dislike", status: 'removed' });
+        } else {
+            // Dacă nu are, îl adăugăm
+            await pool.query("INSERT INTO likes (user_id, captura_id) VALUES ($1, $2)", [user_id, id]);
+            res.json({ message: "Like", status: 'added' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Eroare server");
+    }
+});
+
 app.put('/api/profile/:userId', async (req, res) => {
   try {
     const { userId } = req.params;

@@ -1,55 +1,76 @@
 <div class="register-wrapper">
   <div class="register-card">
     
-    <h2>{{ step === 1 ? 'Creează Cont' : 'Verificare Email' }}</h2>
-    
+    <div class="header">
+        <h2 style="color: #2c3e50;">{{ step === 1 ? 'Înregistrare' : 'Verificare Email' }}</h2>
+        <p>{{ step === 1 ? 'Începe aventura ta de pescar' : 'Introdu codul primit pe email' }}</p>
+    </div>
+
     <div *ngIf="step === 1">
+      
       <div class="form-group">
-        <label>Nume</label>
-        <input type="text" [(ngModel)]="user.nume" placeholder="Numele tău">
+        <label>Numele Tău</label>
+        <input 
+          type="text" 
+          [(ngModel)]="user.nume" 
+          class="modern-input" 
+          placeholder="Ex: Ion Pescarul">
       </div>
 
       <div class="form-group">
         <label>Email</label>
-        <input type="email" [(ngModel)]="user.email" placeholder="email@exemplu.com">
+        <input 
+          type="email" 
+          [(ngModel)]="user.email" 
+          class="modern-input" 
+          placeholder="email@exemplu.ro">
       </div>
 
       <div class="form-group">
         <label>Parolă</label>
-        <input type="password" [(ngModel)]="user.password" placeholder="******">
+        <input 
+          type="password" 
+          [(ngModel)]="user.password" 
+          class="modern-input" 
+          placeholder="••••••">
       </div>
 
-      <button (click)="onSendCode()" [disabled]="isLoading" class="btn-primary">
+      <button (click)="onSendCode()" [disabled]="isLoading" class="btn-nature">
         {{ isLoading ? 'Se trimite...' : 'Trimite Cod de Verificare' }}
       </button>
       
-      <p style="margin-top:10px; text-align:center;">
+      <p class="footer-link">
           Ai deja cont? <a routerLink="/login">Loghează-te</a>
       </p>
     </div>
 
     <div *ngIf="step === 2">
-      <p style="text-align: center; color: #666; margin-bottom: 20px;">
-        Am trimis un cod de 6 cifre la adresa <strong>{{ user.email }}</strong>.
+      <p style="color: #666; margin-bottom: 20px;">
+        Am trimis un cod la <strong>{{ user.email }}</strong>.
       </p>
 
       <div class="form-group">
-        <label>Introdu Codul</label>
-        <input type="text" [(ngModel)]="verificationCode" placeholder="ex: 123456" style="text-align: center; font-size: 1.2rem; letter-spacing: 5px;">
+        <label>Codul de 6 cifre</label>
+        <input 
+          type="text" 
+          [(ngModel)]="verificationCode" 
+          class="modern-input" 
+          placeholder="123456" 
+          style="text-align: center; letter-spacing: 5px; font-weight: bold;">
       </div>
 
-      <button (click)="onFinalizeRegister()" [disabled]="isLoading" class="btn-success">
-        {{ isLoading ? 'Se verifică...' : 'Finalizează Înregistrarea' }}
+      <button (click)="onFinalizeRegister()" [disabled]="isLoading" class="btn-nature">
+        {{ isLoading ? 'Se verifică...' : 'Finalizează Contul' }}
       </button>
 
-      <button (click)="goBack()" class="btn-secondary" style="margin-top: 10px;">
+      <button (click)="goBack()" class="btn-secondary" style="margin-top: 15px;">
         Înapoi (Am greșit emailul)
       </button>
     </div>
 
-    <p *ngIf="errorMessage" class="error-msg">
+    <div *ngIf="errorMessage" class="error-msg">
       ❌ {{ errorMessage }}
-    </p>
+    </div>
 
   </div>
 </div>

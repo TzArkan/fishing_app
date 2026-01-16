@@ -25,6 +25,28 @@ export class HistoryComponent implements OnInit {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
+  publishToFeed(id: number) {
+    if(!confirm('Vrei să postezi această captură în Feed-ul public?')) {
+      return;
+    }
+
+    this.service.publishCaptura(id).subscribe({
+      next: (res) => {
+        // Succes! Acum actualizăm vizual captura în listă
+        // Căutăm captura cu acest ID și îi spunem că e publică
+        const captura = this.capturi.find(c => c.id === id);
+        if (captura) {
+          captura.is_public = true; // Asta face butonul să dispară și să apară bifa
+        }
+        alert('Captura a fost postată în Feed! 🌍');
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Eroare la postare. Încearcă din nou.');
+      }
+    });
+  }
+
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       // ⚠️ AICI E REPARAȚIA: Aflăm cine e logat cu adevărat

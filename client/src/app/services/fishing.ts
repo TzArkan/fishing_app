@@ -27,6 +27,14 @@ sendVerificationCode(nume: string, email: string) {
     return this.http.post<any>(`${this.baseUrl}/login`, user);
   }
 
+  publishCaptura(id: number) {
+    // Apelăm ruta PUT creată în server
+    return this.http.put(`${this.baseUrl}/capturi/${id}/publish`, {});
+  }
+
+  getFeed() {
+    return this.http.get(`${this.baseUrl}/feed`);
+  }
   // --- CAPTURI ---
   
   // Adaugă o captură

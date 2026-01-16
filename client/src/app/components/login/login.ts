@@ -18,21 +18,27 @@ export class LoginComponent {
   constructor(private fishingService: FishingService, private router: Router) {}
 
   onLogin() {
-    const credentials = { email: this.email, password: this.password };
-    
-    this.fishingService.login(credentials).subscribe({
-      next: (res) => {
-        alert("Autentificare reușită! Bine ai venit, " + res.user.nume);
-        // Salvăm faptul că suntem logați (opțional pentru viitor)
-        localStorage.setItem('user', JSON.stringify(res.user));
-        // Navigăm la pagina principală
+  const credentials = { email: this.email, password: this.password };
 
-        
-        this.router.navigate(['/profil']);
-      },
-      error: (err) => {
-        alert(err.error.message || "Eroare la logare");
+  this.fishingService.login(credentials).subscribe({
+    next: (response: any) => {
+      // 1. SALVĂM USERUL PENTRU PROFIL
+      // Profilul tău așteaptă cheia 'user' și se așteaptă să găsească 'id' în ea.
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
       }
-    });
-  }
+      
+      // 2. SALVĂM TOKENUL (dacă există)
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+
+      // 3. ACUM PUTEM PLECA SPRE FEED
+      this.router.navigate(['/feed']);
+    },
+    error: (err) => {
+      alert(err.error?.message || "Eroare la logare");
+    }
+  });
+}
 }

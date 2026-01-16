@@ -6,7 +6,43 @@
   background-size: cover;
   position: relative;
 }
+.btn-post {
+  display: block;
+  width: 90%;             /* Să nu fie chiar până în margine */
+  margin: 10px auto;      /* Centrat și cu spațiu sus/jos */
+  padding: 10px;
+  background-color: #3498db; /* Albastru Instagram */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
 
+.btn-post:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+}
+
+/* Eticheta de "Publicat" */
+.btn-post + span { 
+    /* Asta selectează span-ul imediat după buton (adică textul "Publicat") */
+    display: block;
+    text-align: center;
+    margin: 10px 0;
+    font-weight: bold;
+    font-size: 0.9rem;
+    background: #e8f8f5; /* Verde foarte deschis */
+    color: #27ae60 !important; /* Verdele tău */
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid #27ae60;
+}
 .page-wrapper::before {
   content: '';
   position: absolute;

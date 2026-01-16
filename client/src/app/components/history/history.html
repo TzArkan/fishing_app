@@ -18,7 +18,10 @@
           alt="Peste"
         >
       </div>
-      
+      <button *ngIf="!captura.is_public" (click)="publishToFeed(captura.id)" class="btn-post">
+    Postează în Feed
+</button>
+<span *ngIf="captura.is_public" style="color: green;"> Publicat</span>
       <div class="card-content">
         <h3>{{ captura.specie }}</h3>
         <p style="color: #27ae60; font-weight: bold;">

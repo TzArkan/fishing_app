@@ -5,6 +5,7 @@ import { RegisterComponent } from './components/register/register';
 import { HistoryComponent } from './components/history/history';
 import { ProfilComponent } from './components/profil/profil'; 
 import { EditCatch } from './edit-catch/edit-catch';
+import { FeedComponent } from './components/feed/feed';
 
 export const routes: Routes = [
   // 1. Când intri pe site, te duce la Login
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'istoric', component: HistoryComponent },
+  { path: 'feed', component: FeedComponent },
   // 3. Ruta principală (doar după logare ajungi aici)
   { path: 'adauga', component: AddCatchComponent },
   { path: 'edit-catch/:id', component: EditCatch },
