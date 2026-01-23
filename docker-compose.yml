@@ -1,21 +1,17 @@
 version: '3.8'
 
 services:
-  # 1. Baza de date (POSTGRES)
   db:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password  # Sau parola ta
-      POSTGRES_DB: fishing_db      # Sau numele bazei tale
+      POSTGRES_PASSWORD: password 
+      POSTGRES_DB: fishing_db
     ports:
       - "5432:5432"
     volumes:
-      # Asta e linia care SALVEAZĂ datele!
       - pgdata:/var/lib/postgresql/data
     restart: always
-
-  # 2. Serverul (Node.js)
   server:
     build: ./server
     ports:
@@ -29,17 +25,10 @@ services:
     depends_on:
       - db
     volumes:
-      # 1. Mapăm codul tău ca să se vadă modificările
       - ./server:/app
-      
-      # 2. IGNORĂ node_modules de pe Windows (Asta e linia care te salvează!)
       - /app/node_modules
-      
-      # 3. Păstrăm pozele
       - ./server/uploads:/app/uploads
     restart: always
-
-  # 3. Clientul (Angular)
   client:
     build: ./client
     ports:
@@ -47,7 +36,5 @@ services:
     depends_on:
       - server
     restart: always
-
-# 4. Definim volumul pentru bază (la finalul fișierului)
 volumes:
   pgdata:

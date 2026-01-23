@@ -5,19 +5,14 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer'); // 1. IMPORT NOU PENTRU EMAIL
+const nodemailer = require('nodemailer');
 
 const app = express();
 const port = 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ==========================================
-// 📧 CONFIGURARE EMAIL (NODEMAILER)
-// ==========================================
-// ⚠️ AICI PUNE DATELE TALE REALE DE GMAIL
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -26,17 +21,12 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// ==========================================
-// ⚠️ CALEA FIXĂ PENTRU DOCKER (NU MODIFICĂM)
-// ==========================================
 const uploadDir = '/app/uploads';
 
-// Dacă folderul nu există în container, îl creăm
 if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Facem folderul public
 app.use('/uploads', (req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -44,7 +34,6 @@ app.use('/uploads', (req, res, next) => {
     next();
 }, express.static(uploadDir));
 
-// Configurare Baza de Date (SUPABASE) - RĂMÂNE LA FEL
 const pool = new Pool({
   user: 'postgres.vdltfoaglomyxvfrsmur',
   host: 'aws-1-eu-west-1.pooler.supabase.com',
@@ -56,7 +45,6 @@ const pool = new Pool({
   }
 });
 
-// Configurare stocare poze (Multer) - RĂMÂNE LA FEL
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir); 
@@ -67,12 +55,6 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage: storage });
-
-
-// ================= RUTE API =================
-
-// --- 1. CAPTURI (Add, Get, Delete, Edit) ---
-// (ACEASTĂ SECȚIUNE ESTE NESCHIMBATĂ, CONFORM CERERII)
 
 app.post('/api/capturi', upload.single('poza'), async (req, res) => {
     try {
@@ -107,21 +89,18 @@ app.post('/api/capturi', upload.single('poza'), async (req, res) => {
 
 app.post('/api/capturi/:id/comments', async (req, res) => {
     try {
-        const { id } = req.params; // ID-ul capturii
-        // Angular trimite { userId, text }
+        const { id } = req.params;
         const { userId, text } = req.body; 
 
         if (!text || !userId) {
             return res.status(400).json({ message: "Textul si UserID sunt obligatorii" });
         }
 
-        // Inserăm comentariul
         const newComment = await pool.query(
             "INSERT INTO comments (captura_id, user_id, text) VALUES ($1, $2, $3) RETURNING *",
             [id, userId, text]
         );
 
-        // Luăm numele utilizatorului ca să îl trimitem înapoi (să apară frumos în feed instant)
         const userDetails = await pool.query("SELECT nume FROM users WHERE id = $1", [userId]);
         
         const commentResponse = {
@@ -133,6 +112,41 @@ app.post('/api/capturi/:id/comments', async (req, res) => {
 
     } catch (err) {
         console.error("Eroare comment:", err);
+        res.status(500).send("Eroare server");
+    }
+});
+
+// --- 4. LOCAȚII DE PESCUIT (MAPS) ---
+
+// Adaugă o locație nouă
+app.post('/api/spots', async (req, res) => {
+    try {
+        const { userId, name, latitude, longitude, details } = req.body;
+        
+        if (!userId || !latitude || !longitude) {
+            return res.status(400).json({ message: "Date incomplete!" });
+        }
+
+        const newSpot = await pool.query(
+            "INSERT INTO fishing_spots (user_id, name, latitude, longitude, details) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [userId, name, latitude, longitude, details]
+        );
+
+        res.json(newSpot.rows[0]);
+    } catch (err) {
+        console.error("Eroare la salvare locație:", err);
+        res.status(500).send("Eroare server");
+    }
+});
+
+// Citește locațiile unui user
+app.get('/api/spots', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const result = await pool.query("SELECT * FROM fishing_spots WHERE user_id = $1", [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
         res.status(500).send("Eroare server");
     }
 });
@@ -152,6 +166,18 @@ app.get('/api/capturi', async (req, res) => {
         res.json(allCapturi.rows);
     } catch (err) {
         console.error(err.message);
+        res.status(500).send("Eroare server");
+    }
+});
+
+// Șterge o locație
+app.delete('/api/spots/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query("DELETE FROM fishing_spots WHERE id = $1", [id]);
+        res.json({ message: "Locație ștearsă!" });
+    } catch (err) {
+        console.error("Eroare ștergere spot:", err);
         res.status(500).send("Eroare server");
     }
 });
@@ -200,43 +226,30 @@ app.put('/api/capturi/:id', upload.single('poza'), async (req, res) => {
     }
 });
 
-
-// --- 2. AUTH (MODIFICAT: Verification Code + Hashing) ---
-
-// A. RUTA NOUĂ: TRIMITE COD DE VERIFICARE
 app.post('/api/send-code', async (req, res) => {
     try {
-        // ⚠️ NOU: Primim și 'nume' ca să îl verificăm înainte de a trimite codul
         const { email, nume } = req.body;
         
         if (!email || !nume) {
             return res.status(400).json({ message: "Numele și Emailul sunt obligatorii!" });
         }
 
-        // ⚠️ NOU: REGEX STRICT PENTRU EMAIL
-        // - Cere litere/cifre înainte de @
-        // - Cere domeniu (ex: gmail)
-        // - Cere punct (.)
-        // - Cere extensie de minim 2 litere (ex: com, ro, net). Nu acceptă cifre la final.
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         
         if (!emailRegex.test(email)) {
             return res.status(400).json({ message: "Email invalid! (ex: nume@domeniu.com)" });
         }
 
-        // ⚠️ NOU: VERIFICĂM DACĂ NUMELE EXISTĂ DEJA
         const checkName = await pool.query("SELECT * FROM users WHERE nume = $1", [nume]);
         if (checkName.rows.length > 0) {
             return res.status(409).json({ message: "Acest nume de utilizator este deja luat!" });
         }
 
-        // Verificăm dacă emailul există deja
         const checkEmail = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         if (checkEmail.rows.length > 0) {
             return res.status(409).json({ message: "Există deja un cont cu acest email!" });
         }
 
-        // --- Generare și Trimitere Cod (Rămâne la fel) ---
         const cod = Math.floor(100000 + Math.random() * 900000).toString();
 
         await pool.query("DELETE FROM verification_codes WHERE email = $1", [email]);
@@ -263,7 +276,6 @@ app.post('/api/send-code', async (req, res) => {
     }
 });
 
-// B. REGISTER (MODIFICAT: Verifică codul și Criptează parola)
 app.post('/api/register', async (req, res) => {
     try {
         const { nume, email, password, code } = req.body;
@@ -272,13 +284,11 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ message: "Date incomplete!" });
         }
 
-        // ⚠️ NOU: Verificăm iar numele (în caz că cineva a încercat să fure numele între timp)
         const checkName = await pool.query("SELECT * FROM users WHERE nume = $1", [nume]);
         if (checkName.rows.length > 0) {
             return res.status(409).json({ message: "Acest nume este deja luat!" });
         }
 
-        // Verificare cod
         const codeCheck = await pool.query(
             "SELECT * FROM verification_codes WHERE email = $1 AND code = $2", 
             [email, code]
@@ -288,7 +298,6 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ message: "Cod incorect sau expirat!" });
         }
 
-        // Salvare User
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -308,7 +317,6 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// C. LOGIN (MODIFICAT: Compară Hash-ul)
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -321,14 +329,12 @@ app.post('/api/login', async (req, res) => {
 
         const user = userResult.rows[0];
 
-        // Comparăm parola primită cu cea criptată din bază
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({ message: "Email sau parolă incorectă!" });
         }
 
-        // Verificare profil existent
         const profileCheck = await pool.query('SELECT * FROM profiles WHERE user_id = $1', [user.id]);
         if (profileCheck.rows.length === 0) {
             await pool.query('INSERT INTO profiles (user_id) VALUES ($1)', [user.id]);
@@ -340,9 +346,6 @@ app.post('/api/login', async (req, res) => {
         res.status(500).send("Eroare server");
     }
 });
-
-
-// --- 3. PROFIL (RĂMÂN LA FEL) ---
 
 app.get('/api/profile/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -361,10 +364,9 @@ app.put('/api/capturi/:id/publish', async (req, res) => {
     }
 });
 
-// --- RUTA MODIFICATĂ: GET FEED (Include Like-uri, Comentarii, Tag-uri) ---
 app.get('/api/feed', async (req, res) => {
     try {
-        const userId = req.query.userId || 0; // Luăm ID-ul utilizatorului logat (dacă există) pentru a verifica "liked_by_current_user"
+        const userId = req.query.userId || 0;
 
         const feedQuery = `
             SELECT 
@@ -429,7 +431,6 @@ app.get('/api/feed', async (req, res) => {
 
 app.post('/api/capturi/:id/like', async (req, res) => {
     try {
-        // FIX: Citim userId (trimis de Angular) SAU user_id (dacă vine din altă parte)
         const user_id = req.body.userId || req.body.user_id; 
         const { id } = req.params;
 
@@ -437,15 +438,12 @@ app.post('/api/capturi/:id/like', async (req, res) => {
             return res.status(400).json({ message: "Lipseste ID-ul utilizatorului!" });
         }
 
-        // Verificăm dacă are deja like
         const check = await pool.query("SELECT * FROM likes WHERE user_id = $1 AND captura_id = $2", [user_id, id]);
 
         if (check.rows.length > 0) {
-            // Dacă are, îl ștergem (Dislike)
             await pool.query("DELETE FROM likes WHERE user_id = $1 AND captura_id = $2", [user_id, id]);
             res.json({ message: "Dislike", status: 'removed' });
         } else {
-            // Dacă nu are, îl adăugăm
             await pool.query("INSERT INTO likes (user_id, captura_id) VALUES ($1, $2)", [user_id, id]);
             res.json({ message: "Like", status: 'added' });
         }

@@ -95,4 +95,17 @@ export class FishingService {
     formData.append('avatar', file);
     return this.http.post(`${this.baseUrl}/profile/avatar/${userId}`, formData);
   }
+
+  saveSpot(spotData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/spots`, spotData);
+  }
+
+  getSpots(userId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/spots?userId=${userId}`);
+  }
+
+  deleteSpot(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/spots/${id}`);
+}
+
 }

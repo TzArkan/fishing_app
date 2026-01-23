@@ -1,0 +1,37 @@
+<div class="map-wrapper">
+  
+  <div class="header-info">
+    <h2>🗺️ Harta Pescarului</h2>
+    <p *ngIf="!isAddMode">Navighează liber.</p>
+    <p *ngIf="isAddMode" style="color: #e74c3c; font-weight: bold;">Apasă pe hartă unde ai prins pește! 🎯</p>
+  </div>
+
+  <button 
+    class="fab-add" 
+    (click)="toggleAddMode(!isAddMode)" 
+    [class.active]="isAddMode"
+    title="Adaugă loc nou">
+    {{ isAddMode ? '❌' : '📌' }}
+  </button>
+
+  <div id="map"></div>
+
+  <div class="modal-overlay" *ngIf="showAddModal">
+    <div class="modal-content">
+      <h3>Salvează Locația</h3>
+      <div class="form-group">
+        <label>Nume Locație</label>
+        <input [(ngModel)]="newSpotName" placeholder="Ex: Cotul Dunării" />
+      </div>
+      <div class="form-group">
+        <label>Detalii / Specii</label>
+        <textarea [(ngModel)]="newSpotDetails" placeholder="Ex: Somn, Șalău..."></textarea>
+      </div>
+      
+      <div class="buttons">
+        <button (click)="saveSpot()" class="btn-save">Salvează Pin 📍</button>
+        <button (click)="showAddModal = false" class="btn-cancel">Anulează</button>
+      </div>
+    </div>
+  </div>
+</div>
