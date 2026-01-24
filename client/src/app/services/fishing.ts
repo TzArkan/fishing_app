@@ -108,4 +108,8 @@ export class FishingService {
     return this.http.delete(`${this.baseUrl}/spots/${id}`);
 }
 
+getForecast(lat: number, lng: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/forecast`, { latitude: lat, longitude: lng });
+}
+
 }

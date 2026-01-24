@@ -9,15 +9,293 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const port = 5000;
+const axios = require('axios');
+const cheerio = require('cheerio');
+const SunCalc = require('suncalc');
 
 app.use(cors());
 app.use(express.json());
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'fishingapp26@gmail.com',
-        pass: 'fnvx eojy pczz cfxa'
+// CHEIA TA DE LA OPENWEATHER (Înlocuiește aici!)
+const WEATHER_API_KEY = '4e601c4c3d6087a80b417fac765f2aaa'; 
+
+// Funcție ajutătoare: Calculează scorul bazat pe presiune
+function getPressureScore(pressure) {
+    if (pressure >= 1012 && pressure <= 1018) return 100; // Perfect
+    if (pressure >= 1008 && pressure < 1012) return 80;
+    if (pressure > 1018 && pressure <= 1022) return 80;
+    return 50; 
+}
+// Funcție ajutătoare: Calculează scorul bazat pe lună
+function getMoonScore(moonPhase) {
+    // SunCalc returnează faza de la 0.0 (Nouă) la 0.5 (Plină) la 1.0 (Nouă iar)
+    // Pescuitul e bun la Lună Nouă (0 sau 1) și Lună Plină (0.5)
+    
+    // Distanța față de Lună Plină (0.5)
+    const distFromFull = Math.abs(0.5 - moonPhase);
+    
+    // Dacă e foarte aproape de 0.5 (Plină) sau foarte aproape de 0.5 distanță (Nouă)
+    if (distFromFull < 0.1) return 100; // Lună Plină (+/-)
+    if (distFromFull > 0.4) return 90;  // Lună Nouă (+/-)
+    return 60; // Alte faze
+}
+
+// 5. CALENDAR PESCUIT & SCORING
+// Funcție separată de calcul scor (o refolosim pentru fiecare oră)
+function calculateScore(weather, date, lat, long) {
+    // 1. Lună
+    const moonIllum = SunCalc.getMoonIllumination(date);
+    const moonTimes = SunCalc.getMoonTimes(date, lat, long);
+    
+    // Scorul Lunii (bazat pe fază)
+    const distFromFull = Math.abs(0.5 - moonIllum.phase);
+    let moonScore = 50;
+    if (distFromFull < 0.1) moonScore = 100; // Plină
+    else if (distFromFull > 0.4) moonScore = 90; // Nouă
+    else moonScore = 60;
+
+    // Bonus pentru Răsărit/Apus Lună (Momente majore)
+    // Verificăm dacă ora curentă e aproape de moonrise/moonset
+    const currentHour = date.getHours();
+    if (moonTimes.rise && Math.abs(moonTimes.rise.getHours() - currentHour) <= 1) moonScore += 20;
+    if (moonTimes.set && Math.abs(moonTimes.set.getHours() - currentHour) <= 1) moonScore += 20;
+
+    // 2. Presiune (Ideal 1012-1018)
+    const p = weather.main.pressure;
+    let pressureScore = 50;
+    if (p >= 1012 && p <= 1018) pressureScore = 100;
+    else if ((p >= 1008 && p < 1012) || (p > 1018 && p <= 1022)) pressureScore = 80;
+
+    // 3. Temperatură (Ideal 12-25)
+    const t = weather.main.temp;
+    let tempScore = 50;
+    if (t >= 12 && t <= 25) tempScore = 100;
+    else if (t >= 8 && t < 12) tempScore = 70;
+
+    // 4. Vânt (Ideal < 10km/h)
+    const w = weather.wind.speed * 3.6; // conversie m/s in km/h
+    let windScore = 30;
+    if (w < 10) windScore = 100;
+    else if (w < 20) windScore = 70;
+
+    // Calcul Final Ponderat
+    let final = (pressureScore * 0.35) + (moonScore * 0.30) + (tempScore * 0.20) + (windScore * 0.15);
+    return Math.min(Math.round(final), 100); // Maxim 100
+}
+
+const AFDJ_STATIONS = [
+    { name: "Bazias", lat: 44.81, lng: 21.39 },
+    { name: "Drencova", lat: 44.63, lng: 21.98 },
+    { name: "Orsova", lat: 44.72, lng: 22.39 },
+    { name: "Tr. Severin", lat: 44.63, lng: 22.65 }, // Drobeta
+    { name: "Gruia", lat: 44.26, lng: 22.70 },
+    { name: "Calafat", lat: 43.99, lng: 22.93 },
+    { name: "Bechet", lat: 43.79, lng: 23.95 },
+    { name: "Corabia", lat: 43.77, lng: 24.50 },
+    { name: "Tr. Magurele", lat: 43.75, lng: 24.87 },
+    { name: "Zimnicea", lat: 43.66, lng: 25.36 },
+    { name: "Giurgiu", lat: 43.89, lng: 25.96 },
+    { name: "Oltenita", lat: 44.08, lng: 26.63 },
+    { name: "Calarasi", lat: 44.19, lng: 27.33 },
+    { name: "Cernavoda", lat: 44.33, lng: 28.03 },
+    { name: "Harsova", lat: 44.69, lng: 27.95 },
+    { name: "Braila", lat: 45.27, lng: 27.97 },
+    { name: "Galati", lat: 45.43, lng: 28.03 },
+    { name: "Isaccea", lat: 45.26, lng: 28.46 },
+    { name: "Tulcea", lat: 45.18, lng: 28.80 }
+];
+
+function getClosestStation(lat, lng) {
+    let closest = null;
+    let minDist = Infinity;
+
+    AFDJ_STATIONS.forEach(station => {
+        const dist = Math.sqrt(Math.pow(station.lat - lat, 2) + Math.pow(station.lng - lng, 2));
+        if (dist < minDist) {
+            minDist = dist;
+            closest = station;
+        }
+    });
+    return closest;
+}
+app.post('/api/forecast', async (req, res) => {
+    try {
+        const { latitude, longitude } = req.body;
+        
+        const targetStation = getClosestStation(latitude, longitude);
+        console.log(`Utilizatorul e lângă: ${targetStation.name}`);
+
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${WEATHER_API_KEY}`;
+        const response = await axios.get(url);
+        const list = response.data.list;
+
+        // --- SCRAPING AFDJ AVANSAT (Prognoza 5 Zile) ---
+        let stationName = targetStation.name;
+        let currentLevel = 0; // Nivelul de azi
+        let currentVar = 0;   // Variația de azi
+        let forecastLevels = []; // Aici vom pune [Val24H, Val48H, Val72H, Val96H, Val120H]
+        let dataAvailable = false;
+
+        try {
+            const headers = { 'User-Agent': 'Mozilla/5.0' };
+            const afdjRes = await axios.get('https://www.afdj.ro/ro/cotele-dunarii', { headers, timeout: 4000 });
+            const $ = cheerio.load(afdjRes.data);
+            
+            $('tbody tr').each((i, row) => {
+                const text = $(row).text().trim();
+                
+                // Căutăm stația noastră
+                if (text.toLowerCase().includes(targetStation.name.toLowerCase())) {
+                    dataAvailable = true;
+                    const tds = $(row).find('td');
+
+                    // 1. Extragem Nivelul Curent (Coloana 2 - index 2)
+                    currentLevel = parseInt($(tds[2]).text().trim());
+
+                    // 2. Extragem Variația Curentă (Coloana 3 - index 3)
+                    // Curățăm textul gen "+ 6" sau "6"
+                    const varText = $(tds[3]).text().trim().match(/([+-]?\s?\d+)/);
+                    if (varText) currentVar = parseInt(varText[0].replace(/\s/g, ''));
+
+                    // 3. Extragem Prognozele (Coloanele 6, 7, 8, 9, 10 corespund la 24H...120H)
+                    // Verifică imaginea ta: 24H este a 7-a coloană vizuală (index 6 în array 0-indexed)
+                    // Indexii sunt: 6(24H), 7(48H), 8(72H), 9(96H), 10(120H)
+                    for (let j = 6; j <= 10; j++) {
+                        const val = parseInt($(tds[j]).text().trim());
+                        forecastLevels.push(isNaN(val) ? currentLevel : val); // Fallback la current dacă e gol
+                    }
+                    
+                    return false; // Stop loop
+                }
+            });
+        } catch (e) {
+            console.log("Eroare AFDJ:", e.message);
+        }
+
+        // --- GRUPARE DATE ---
+        const daysMap = {};
+        
+        // Un contor ca să știm a câta zi unică procesăm (0=Azi, 1=Maine...)
+        let dayIndexCounter = -1; 
+        let lastProcessedDate = "";
+
+        list.forEach(item => {
+            const dateObj = new Date(item.dt * 1000);
+            const dateKey = dateObj.toISOString().split('T')[0];
+            const hour = dateObj.getHours() + ":00";
+            const moonIllum = SunCalc.getMoonIllumination(dateObj);
+            
+            // Verificăm dacă am trecut la o zi nouă pentru a incrementa indexul
+            if (dateKey !== lastProcessedDate) {
+                dayIndexCounter++;
+                lastProcessedDate = dateKey;
+            }
+
+            // --- CALCUL VARIAȚIE APĂ PENTRU ZIUA ASTA ---
+            let dailyWaterVar = 0;
+            let dailyWaterLevel = 0;
+            let waterScore = 50; // Default
+
+            if (dataAvailable) {
+                if (dayIndexCounter === 0) {
+                    // AZI: Folosim datele curente
+                    dailyWaterLevel = currentLevel;
+                    dailyWaterVar = currentVar;
+                } else if (dayIndexCounter > 0 && dayIndexCounter <= 5) {
+                    // ZILELE URMATOARE (1..5):
+                    // Nivelul prognozat pentru ziua curentă (index - 1 pt că array-ul începe de la 24H)
+                    const predictedLevel = forecastLevels[dayIndexCounter - 1]; 
+                    
+                    // Nivelul zilei anterioare (ca să calculăm variația)
+                    const previousLevel = dayIndexCounter === 1 ? currentLevel : forecastLevels[dayIndexCounter - 2];
+                    
+                    dailyWaterLevel = predictedLevel;
+                    dailyWaterVar = predictedLevel - previousLevel; // Variația față de ieri
+                }
+                
+                // Calcul Scored Apă
+                if (dailyWaterVar > 0 && dailyWaterVar <= 10) waterScore = 100; // Creștere ușoară
+                else if (dailyWaterVar === 0) waterScore = 80; // Staționar
+                else if (dailyWaterVar > 10) waterScore = 60; // Creștere mare
+                else if (dailyWaterVar < 0 && dailyWaterVar >= -5) waterScore = 70; // Scădere mică
+                else waterScore = 40; // Scădere mare
+            }
+
+            // Calculăm scorul Meteo
+            let baseScore = calculateScore(item, dateObj, latitude, longitude);
+            
+            // Scor Final (85% Meteo + 15% Apa)
+            let finalHourlyScore = baseScore;
+            if (dataAvailable) {
+                finalHourlyScore = Math.round((baseScore * 0.85) + (waterScore * 0.15));
+            }
+
+            if (!daysMap[dateKey]) {
+                daysMap[dateKey] = {
+                    date: dateKey,
+                    dayName: dateObj.toLocaleDateString('ro-RO', { weekday: 'long' }),
+                    totalScore: 0,
+                    count: 0,
+                    hourlyData: [],
+                    rawPressure: 0,
+                    rawWind: 0,
+                    moonPhaseVal: moonIllum.phase,
+                    // Salvăm datele despre apă specifice acestei zile
+                    waterInfo: {
+                        station: stationName,
+                        level: dailyWaterLevel,
+                        variation: dailyWaterVar,
+                        available: dataAvailable
+                    }
+                };
+            }
+
+            daysMap[dateKey].totalScore += finalHourlyScore;
+            daysMap[dateKey].count++;
+            daysMap[dateKey].rawPressure += item.main.pressure;
+            daysMap[dateKey].rawWind += item.wind.speed;
+
+            daysMap[dateKey].hourlyData.push({
+                time: hour,
+                score: finalHourlyScore,
+                temp: Math.round(item.main.temp),
+                icon: item.weather[0].icon,
+                desc: item.weather[0].description
+            });
+        });
+
+        const finalForecast = Object.values(daysMap).map(day => {
+            const avgScore = Math.round(day.totalScore / day.count);
+            const avgPressure = Math.round(day.rawPressure / day.count);
+            const avgWind = (day.rawWind / day.count * 3.6).toFixed(1);
+
+            let moonText = "În Creștere";
+            if (day.moonPhaseVal < 0.1 || day.moonPhaseVal > 0.9) moonText = "Lună Nouă 🌑";
+            else if (day.moonPhaseVal > 0.4 && day.moonPhaseVal < 0.6) moonText = "Lună Plină 🌕";
+            else if (day.moonPhaseVal < 0.5) moonText = "Primul Pătrar 🌓";
+            else moonText = "Ultimul Pătrar 🌗";
+
+            return {
+                ...day,
+                averageScore: avgScore,
+                verdict: avgScore > 75 ? "Excelent" : (avgScore > 50 ? "Bun" : "Slab"),
+                details: {
+                    // Structurăm datele frumos pentru frontend
+                    waterLevel: day.waterInfo.level,
+                    waterVariation: day.waterInfo.variation,
+                    stationName: day.waterInfo.station,
+                    avgPressure: avgPressure,
+                    avgWind: avgWind,
+                    moonText: moonText
+                }
+            };
+        });
+
+        res.json(finalForecast.slice(0, 5));
+
+    } catch (err) {
+        console.error("Eroare forecast:", err.message);
+        res.status(500).json({ message: "Eroare server" });
     }
 });
 

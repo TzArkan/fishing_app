@@ -1,0 +1,231 @@
+/* Containerul principal care permite paginii să crească */
+.calendar-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 20px 100px 20px; /* Padding mare jos ca să nu se lipească de fundal */
+    font-family: 'Poppins', sans-serif;
+    /* Asigură-te că nu există height: 100vh aici */
+    min-height: 100vh; /* Ocupă minim tot ecranul, dar crește cât e nevoie */
+    box-sizing: border-box;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap; /* Pe mobil se vor pune unul sub altul */
+    gap: 15px;
+}
+
+.header-section h2 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+.location-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+}
+.location-btn:hover { background: #2980b9; }
+
+/* Scroll orizontal pentru zile (Carduri) */
+.days-scroll {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding: 10px 5px 20px 5px; /* Spațiu pentru umbră */
+    scrollbar-width: thin; /* Pentru Firefox */
+}
+
+/* Stil card zi */
+.day-card {
+    min-width: 110px;
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
+.day-card:hover { transform: translateY(-5px); }
+
+.day-card.active {
+    border-color: #27ae60;
+    background: #f0fdf4;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+}
+
+.date { font-size: 0.9em; color: #7f8c8d; }
+.day-name { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
+
+.score-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+.score-badge.good { background: #27ae60; }
+.score-badge.bad { background: #e74c3c; }
+
+/* SECTIUNEA PRINCIPALA (GRAFIC + LISTA) */
+.main-content {
+    animation: fadeIn 0.5s ease-in;
+    margin-top: 20px;
+}
+
+/* Titlu Verdict */
+.verdict-title {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-left: 5px solid #27ae60;
+    padding-left: 15px;
+}
+
+/* Container Grafic */
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    height: 350px; /* Înălțime fixă pentru grafic */
+    position: relative;
+}
+
+/* LISTA ORELOR - Aici e cheia pentru afișarea în jos */
+.hourly-list {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    /* Nu punem height fix aici, lăsăm să curgă */
+}
+
+.hour-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #f1f2f6;
+    padding: 12px 0;
+}
+.hour-item:last-child { border-bottom: none; }
+
+.time { font-weight: bold; width: 50px; color: #2c3e50; }
+.temp { width: 50px; color: #7f8c8d; }
+
+.hour-bar {
+    flex-grow: 1;
+    height: 10px;
+    background: #ecf0f1;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    transition: width 1s ease-out;
+}
+
+.score-val {
+    width: 40px;
+    text-align: right;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+/* Modal Harta */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+.modal-content {
+    background: white;
+    padding: 25px;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+#picker-map {
+    height: 350px;
+    width: 100%;
+    margin: 20px 0;
+    background: #eee;
+    border-radius: 10px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.confirm-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+.cancel-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* Stiluri Tabel Factori */
+.factors-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.factors-table th, .factors-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.factors-table th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.factors-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Tag-uri pentru influență */
+.tag {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: white;
+}
+
+.tag.high { background-color: #27ae60; }   /* Verde - Bun */
+.tag.medium { background-color: #f39c12; } /* Portocaliu - Mediu */
+.tag.low { background-color: #e74c3c; }    /* Roșu - Slab */

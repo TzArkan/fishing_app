@@ -7,6 +7,7 @@ import { ProfilComponent } from './components/profil/profil';
 import { EditCatch } from './edit-catch/edit-catch';
 import { FeedComponent } from './components/feed/feed';
 import { Map } from './components/map/map';
+import { CalendarComponent} from './components/calendar/calendar';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -17,5 +18,6 @@ export const routes: Routes = [
   { path: 'adauga', component: AddCatchComponent },
   { path: 'edit-catch/:id', component: EditCatch },
   { path: 'profil', component: ProfilComponent },
-  { path: 'harta', component: Map }
+  { path: 'harta', component: Map },
+  { path: 'calendar', component: CalendarComponent }
 ];
