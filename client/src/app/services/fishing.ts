@@ -112,4 +112,12 @@ getForecast(lat: number, lng: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/forecast`, { latitude: lat, longitude: lng });
 }
 
+requestPasswordReset(email: string) {
+    return this.http.post(`${this.baseUrl}/forgot-password`, { email });
+}
+
+confirmPasswordReset(data: any) {
+    return this.http.post(`${this.baseUrl}/reset-password`, data);
+}
+
 }

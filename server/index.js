@@ -12,7 +12,13 @@ const port = 5000;
 const axios = require('axios');
 const cheerio = require('cheerio');
 const SunCalc = require('suncalc');
-
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'fishingapp26@gmail.com', // ⚠️ PUNE EMAILUL TĂU AICI
+        pass: 'pzsz kgew vyay rzaz' // ⚠️ PUNE CODUL TĂU DE 16 LITERE AICI
+    }
+});
 app.use(cors());
 app.use(express.json());
 
@@ -20,67 +26,81 @@ app.use(express.json());
 const WEATHER_API_KEY = '4e601c4c3d6087a80b417fac765f2aaa'; 
 
 // Funcție ajutătoare: Calculează scorul bazat pe presiune
-function getPressureScore(pressure) {
-    if (pressure >= 1012 && pressure <= 1018) return 100; // Perfect
-    if (pressure >= 1008 && pressure < 1012) return 80;
-    if (pressure > 1018 && pressure <= 1022) return 80;
-    return 50; 
-}
-// Funcție ajutătoare: Calculează scorul bazat pe lună
-function getMoonScore(moonPhase) {
-    // SunCalc returnează faza de la 0.0 (Nouă) la 0.5 (Plină) la 1.0 (Nouă iar)
-    // Pescuitul e bun la Lună Nouă (0 sau 1) și Lună Plină (0.5)
-    
-    // Distanța față de Lună Plină (0.5)
-    const distFromFull = Math.abs(0.5 - moonPhase);
-    
-    // Dacă e foarte aproape de 0.5 (Plină) sau foarte aproape de 0.5 distanță (Nouă)
-    if (distFromFull < 0.1) return 100; // Lună Plină (+/-)
-    if (distFromFull > 0.4) return 90;  // Lună Nouă (+/-)
-    return 60; // Alte faze
-}
-
-// 5. CALENDAR PESCUIT & SCORING
-// Funcție separată de calcul scor (o refolosim pentru fiecare oră)
 function calculateScore(weather, date, lat, long) {
-    // 1. Lună
+    // --- 1. LUNĂ & SOLUNAR (30% din total) ---
+    // Soarele și Luna sunt factori critici. "Tranzitul" este echivalentul "Major Time" din aplicații.
     const moonIllum = SunCalc.getMoonIllumination(date);
     const moonTimes = SunCalc.getMoonTimes(date, lat, long);
     
-    // Scorul Lunii (bazat pe fază)
+    // A. Faza Lunii (Baza)
     const distFromFull = Math.abs(0.5 - moonIllum.phase);
-    let moonScore = 50;
-    if (distFromFull < 0.1) moonScore = 100; // Plină
-    else if (distFromFull > 0.4) moonScore = 90; // Nouă
-    else moonScore = 60;
+    let moonScore = 50; // Pornim de la mediu
+    
+    if (distFromFull < 0.1) moonScore = 95;      // Lună Plină (Foarte Activ)
+    else if (moonIllum.phase < 0.1 || moonIllum.phase > 0.9) moonScore = 100; // Lună Nouă (Excelent - întuneric total)
+    else if (distFromFull < 0.25) moonScore = 70; // Primul/Ultimul Pătrar
+    else moonScore = 40; // Alte faze intermediare
 
-    // Bonus pentru Răsărit/Apus Lună (Momente majore)
-    // Verificăm dacă ora curentă e aproape de moonrise/moonset
+    // B. Momente Solunare (Bonusuri)
     const currentHour = date.getHours();
-    if (moonTimes.rise && Math.abs(moonTimes.rise.getHours() - currentHour) <= 1) moonScore += 20;
-    if (moonTimes.set && Math.abs(moonTimes.set.getHours() - currentHour) <= 1) moonScore += 20;
+    
+    // Perioade MINORE (Răsărit / Apus) - Durată aprox 1h
+    // Verificăm fereastra de +/- 1 oră
+    if (moonTimes.rise && Math.abs(moonTimes.rise.getHours() - currentHour) <= 1) moonScore += 15;
+    if (moonTimes.set && Math.abs(moonTimes.set.getHours() - currentHour) <= 1) moonScore += 15;
 
-    // 2. Presiune (Ideal 1012-1018)
+    // Perioade MAJORE (Tranzit - Luna sus) - Durată aprox 2h - CEL MAI IMPORTANT
+    // Fishing Points pune mare preț pe asta. 'transit' e momentul când luna e cel mai sus (Zenit).
+    if (moonTimes.transit) {
+        const transitHour = moonTimes.transit.getHours();
+        // Fereastră mai largă (+/- 2 ore) pentru momentul major
+        if (Math.abs(transitHour - currentHour) <= 2) {
+            moonScore += 25; // Bonus Masiv
+        }
+    }
+
+    // Limităm scorul lunii la 100 (ca să nu iasă din grafic)
+    moonScore = Math.min(moonScore, 100);
+
+
+    // --- 2. PRESIUNE ATMOSFERICĂ (35% din total) ---
+    // Ideal: 1012-1018 hPa (Stabilă sau în ușoară scădere).
     const p = weather.main.pressure;
     let pressureScore = 50;
-    if (p >= 1012 && p <= 1018) pressureScore = 100;
-    else if ((p >= 1008 && p < 1012) || (p > 1018 && p <= 1022)) pressureScore = 80;
 
-    // 3. Temperatură (Ideal 12-25)
+    if (p >= 1012 && p <= 1018) pressureScore = 100; // Perfect
+    else if (p >= 1005 && p < 1012) pressureScore = 85; // Acceptabil (presiune joasă, adesea înainte de furtună - peștele mănâncă)
+    else if (p > 1018 && p <= 1025) pressureScore = 70; // Presiune mare (front rece, cer senin, dar peștele poate fi apatic)
+    else pressureScore = 30; // Extreme (furtună mare sau presiune uriașă)
+
+
+    // --- 3. TEMPERATURĂ (20% din total) ---
+    // Ideal general: 12-25°C. 
+    // Notă: Aici ideal ar fi temperatura APEI, dar folosim aerul ca aproximare.
     const t = weather.main.temp;
     let tempScore = 50;
-    if (t >= 12 && t <= 25) tempScore = 100;
-    else if (t >= 8 && t < 12) tempScore = 70;
+    
+    if (t >= 15 && t <= 24) tempScore = 100;
+    else if (t >= 10 && t < 15) tempScore = 80; // Puțin rece, dar ok pt răpitor
+    else if (t > 24 && t <= 30) tempScore = 70; // Prea cald, peștele stă la fund
+    else if (t < 5 || t > 32) tempScore = 20;   // Extreme
 
-    // 4. Vânt (Ideal < 10km/h)
-    const w = weather.wind.speed * 3.6; // conversie m/s in km/h
-    let windScore = 30;
-    if (w < 10) windScore = 100;
-    else if (w < 20) windScore = 70;
 
-    // Calcul Final Ponderat
+    // --- 4. VÂNT (15% din total) ---
+    // Ideal: Briză ușoară (vântul oxigenează apa). Vântul 0 e uneori rău (apă stătută).
+    const w = weather.wind.speed * 3.6; // m/s -> km/h
+    let windScore = 50;
+
+    if (w > 2 && w <= 12) windScore = 100; // Briză perfectă (valuri mici)
+    else if (w >= 0 && w <= 2) windScore = 80; // Calm total (ok, dar uneori peștele e precaut)
+    else if (w > 12 && w <= 25) windScore = 60; // Vânt măricel (pescuit dificil)
+    else windScore = 20; // Furtună/Vânt puternic
+
+
+    // --- CALCUL FINAL PONDERAT ---
     let final = (pressureScore * 0.35) + (moonScore * 0.30) + (tempScore * 0.20) + (windScore * 0.15);
-    return Math.min(Math.round(final), 100); // Maxim 100
+    
+    return Math.min(Math.round(final), 100);
 }
 
 const AFDJ_STATIONS = [
@@ -118,6 +138,93 @@ function getClosestStation(lat, lng) {
     });
     return closest;
 }
+
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Emailul este obligatoriu!" });
+        }
+
+        // A. Verificăm dacă userul există (Nu trimitem cod dacă nu are cont)
+        const userCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Nu există cont cu acest email." });
+        }
+
+        const cod = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // B. Curățăm codurile vechi (exact ca la register/send-code)
+        await pool.query("DELETE FROM verification_codes WHERE email = $1", [email]);
+
+        // C. Inserăm noul cod
+        // NOTĂ: Dacă la register îți merge fără ID, înseamnă că acolo merge. 
+        // Dacă totuși aici crapă, e din cauza diferenței de tabel, dar încercăm varianta standard întâi.
+        await pool.query("INSERT INTO verification_codes (email, code) VALUES ($1, $2)", [email, cod]);
+
+        // D. Trimitem Email
+        const mailOptions = {
+            from: 'Fishing App <noreply@fishingapp.com>',
+            to: email,
+            subject: 'Resetare Parolă',
+            text: `Salut! Codul tău de resetare este: ${cod}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Eroare mail:", error);
+                return res.status(500).json({ message: "Eroare la trimiterea emailului." });
+            }
+            res.json({ message: "Codul a fost trimis pe email!" });
+        });
+
+    } catch (err) {
+        console.error("Eroare forgot-password:", err);
+        res.status(500).json({ message: "Eroare server" });
+    }
+});
+
+// 2. VERIFICĂ COD ȘI SCHIMBĂ PAROLA
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({ message: "Toate câmpurile sunt obligatorii!" });
+        }
+
+        // A. Verificăm codul în tabelul verification_codes
+        const codeCheck = await pool.query(
+            "SELECT * FROM verification_codes WHERE email = $1 AND code = $2", 
+            [email, code]
+        );
+
+        if (codeCheck.rows.length === 0) {
+            return res.status(400).json({ message: "Cod incorect sau expirat!" });
+        }
+
+        // B. Hashuim parola nouă
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // C. Actualizăm parola utilizatorului
+        await pool.query(
+            "UPDATE users SET password = $1 WHERE email = $2",
+            [hashedPassword, email]
+        );
+
+        // D. Ștergem codul folosit
+        await pool.query("DELETE FROM verification_codes WHERE email = $1", [email]);
+
+        res.json({ success: true, message: "Parola a fost schimbată cu succes!" });
+
+    } catch (err) {
+        console.error("Eroare reset-confirm:", err);
+        res.status(500).json({ message: "Eroare server" });
+    }
+});
+
 app.post('/api/forecast', async (req, res) => {
     try {
         const { latitude, longitude } = req.body;
@@ -270,10 +377,10 @@ app.post('/api/forecast', async (req, res) => {
             const avgWind = (day.rawWind / day.count * 3.6).toFixed(1);
 
             let moonText = "În Creștere";
-            if (day.moonPhaseVal < 0.1 || day.moonPhaseVal > 0.9) moonText = "Lună Nouă 🌑";
-            else if (day.moonPhaseVal > 0.4 && day.moonPhaseVal < 0.6) moonText = "Lună Plină 🌕";
-            else if (day.moonPhaseVal < 0.5) moonText = "Primul Pătrar 🌓";
-            else moonText = "Ultimul Pătrar 🌗";
+            if (day.moonPhaseVal < 0.1 || day.moonPhaseVal > 0.9) moonText = "Lună Nouă";
+            else if (day.moonPhaseVal > 0.4 && day.moonPhaseVal < 0.6) moonText = "Lună Plină";
+            else if (day.moonPhaseVal < 0.5) moonText = "Primul Pătrar";
+            else moonText = "Ultimul Pătrar";
 
             return {
                 ...day,

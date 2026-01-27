@@ -19,7 +19,7 @@ export class App {
       if (event instanceof NavigationEnd) {
         const currentUrl = event.urlAfterRedirects;
         // Ascunde meniul pe paginile de login/register
-        if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl === '/') {
+        if (currentUrl.includes('/login') || currentUrl.includes('/register') ||currentUrl.includes('/resetare-parola') || currentUrl === '/') {
            this.showMenu = false;
         } else {
            this.showMenu = true;

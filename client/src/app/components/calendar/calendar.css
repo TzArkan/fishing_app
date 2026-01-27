@@ -1,54 +1,94 @@
-/* Containerul principal care permite paginii să crească */
+/* --- FUNDAL PRINCIPAL (Natură) --- */
 .calendar-wrapper {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px 20px 100px 20px; /* Padding mare jos ca să nu se lipească de fundal */
-    font-family: 'Poppins', sans-serif;
-    /* Asigură-te că nu există height: 100vh aici */
-    min-height: 100vh; /* Ocupă minim tot ecranul, dar crește cât e nevoie */
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Aliniat sus pentru scroll */
+    padding: 40px 20px;
+    background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
     box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
+/* Strat întunecat peste poză */
+.calendar-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+}
+
+/* --- CARDUL DE STICLĂ (NOU) --- */
+.glass-card {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.9); /* Transparență */
+    backdrop-filter: blur(12px);          /* Efectul de blur */
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 900px; /* Lățimea maximă a calendarului */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* --- Stiluri Header --- */
 .header-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    flex-wrap: wrap; /* Pe mobil se vor pune unul sub altul */
+    flex-wrap: wrap;
     gap: 15px;
 }
 
 .header-section h2 {
     color: #2c3e50;
     margin: 0;
+    font-weight: 700;
 }
 
+/* Buton Locație - Stil Verde Natură */
 .location-btn {
-    background: #3498db;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: white;
     border: none;
     padding: 12px 20px;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.3s;
-    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(46, 204, 113, 0.3);
 }
-.location-btn:hover { background: #2980b9; }
+.location-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(46, 204, 113, 0.5);
+}
 
-/* Scroll orizontal pentru zile (Carduri) */
+/* Loading */
+.loading {
+    text-align: center;
+    font-weight: bold;
+    color: #2c3e50;
+    padding: 20px;
+}
+
+/* --- Scroll orizontal Zile --- */
 .days-scroll {
     display: flex;
     gap: 15px;
     overflow-x: auto;
-    padding: 10px 5px 20px 5px; /* Spațiu pentru umbră */
-    scrollbar-width: thin; /* Pentru Firefox */
+    padding: 10px 5px 20px 5px;
+    scrollbar-width: thin;
 }
 
-/* Stil card zi */
 .day-card {
     min-width: 110px;
-    background: white;
+    background: white; /* Rămâne alb solid pentru contrast pe sticlă */
     padding: 15px;
     border-radius: 12px;
     text-align: center;
@@ -62,7 +102,7 @@
     gap: 8px;
 }
 
-.day-card:hover { transform: translateY(-5px); }
+.day-card:hover { transform: translateY(-5px); border-color: #2ecc71; }
 
 .day-card.active {
     border-color: #27ae60;
@@ -83,13 +123,12 @@
 .score-badge.good { background: #27ae60; }
 .score-badge.bad { background: #e74c3c; }
 
-/* SECTIUNEA PRINCIPALA (GRAFIC + LISTA) */
+/* --- Main Content --- */
 .main-content {
     animation: fadeIn 0.5s ease-in;
     margin-top: 20px;
 }
 
-/* Titlu Verdict */
 .verdict-title {
     font-size: 1.5rem;
     color: #2c3e50;
@@ -98,24 +137,25 @@
     padding-left: 15px;
 }
 
-/* Container Grafic */
+/* Grafic */
 .chart-container {
     background: white;
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 30px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    height: 350px; /* Înălțime fixă pentru grafic */
+    height: 350px;
     position: relative;
+    border: 1px solid #eee;
 }
 
-/* LISTA ORELOR - Aici e cheia pentru afișarea în jos */
+/* Lista Ore */
 .hourly-list {
     background: white;
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    /* Nu punem height fix aici, lăsăm să curgă */
+    border: 1px solid #eee;
 }
 
 .hour-item {
@@ -150,7 +190,33 @@
     font-size: 0.9em;
 }
 
-/* Modal Harta */
+/* --- Tabel Factori --- */
+.factors-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+}
+
+.factors-table th, .factors-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.factors-table th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.factors-table tr:last-child td { border-bottom: none; }
+
+/* --- Modal Harta --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -183,49 +249,10 @@
     justify-content: flex-end;
 }
 
-.confirm-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-.cancel-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+.confirm-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;}
+.cancel-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-/* Stiluri Tabel Factori */
-.factors-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
-}
-
-.factors-table th, .factors-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.factors-table th {
-    background-color: #f8f9fa;
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-.factors-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* Tag-uri pentru influență */
-.tag {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.85em;
-    font-weight: bold;
-    color: white;
-}
-
-.tag.high { background-color: #27ae60; }   /* Verde - Bun */
-.tag.medium { background-color: #f39c12; } /* Portocaliu - Mediu */
-.tag.low { background-color: #e74c3c; }    /* Roșu - Slab */

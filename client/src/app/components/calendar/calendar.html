@@ -1,97 +1,85 @@
 <div class="calendar-wrapper">
   
-  <div class="header-section">
-    <h2> Calendar Pescuit 5 Zile</h2>
-    <button (click)="openMapPicker()" class="location-btn"> Alege altă locație</button>
-  </div>
+  <div class="glass-card">
+    
+    <div class="header-section">
+      <h2>📅 Calendar Pescuit 5 Zile</h2>
+      <button (click)="openMapPicker()" class="location-btn"> Alege altă locație</button>
+    </div>
 
-  <div *ngIf="loading" class="loading"> Calculăm prognoza...</div>
+    <div *ngIf="loading" class="loading">📡 Calculăm prognoza...</div>
 
-  <div class="days-scroll" *ngIf="!loading && forecastDays.length">
-    <div class="day-card" *ngFor="let day of forecastDays" (click)="selectDay(day)" [class.active]="selectedDay === day">
-      <span class="date">{{ day.date | date:'dd MMM' }}</span>
-      <span class="day-name">{{ day.dayName }}</span>
-      <div class="score-badge" [ngClass]="{'good': day.averageScore > 60, 'bad': day.averageScore <= 60}">
-        {{ day.averageScore }}%
+    <div class="days-scroll" *ngIf="!loading && forecastDays.length">
+      <div class="day-card" *ngFor="let day of forecastDays" (click)="selectDay(day)" [class.active]="selectedDay === day">
+        <span class="date">{{ day.date | date:'dd MMM' }}</span>
+        <span class="day-name">{{ day.dayName }}</span>
+        <div class="score-badge" [ngClass]="{'good': day.averageScore > 60, 'bad': day.averageScore <= 60}">
+          {{ day.averageScore }}%
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="main-content" *ngIf="selectedDay">
-    <h3 class="verdict-title">
-        {{ selectedDay.dayName }} - Verdict: <span style="color: #27ae60">{{ selectedDay.verdict }}</span>
-    </h3>
+    <div class="main-content" *ngIf="selectedDay">
+      <h3 class="verdict-title">
+          {{ selectedDay.dayName }} - Verdict: <span style="color: #27ae60">{{ selectedDay.verdict }}</span>
+      </h3>
 
-    <div class="chart-container">
-        <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
-    </div>
+      <div class="chart-container">
+          <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
+      </div>
 
+      <h4 style="color: #2c3e50; margin-bottom: 15px;">Factorii zilei (Medii)</h4>
+      <table class="factors-table">
+          <thead>
+              <tr>
+                  <th>Factor</th>
+                  <th>Valoare</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                  <td> Faza Lunii</td>
+                  <td>{{ selectedDay.details?.moonText }}</td>
+              </tr>
+              <tr>
+                  <td> Variație Cote</td>
+                  <td>
+                      {{ selectedDay.details?.waterVariation > 0 ? '+' : '' }}{{ selectedDay.details?.waterVariation }} cm
+                  </td>
+              </tr>
+              <tr>
+                  <td>
+                       Cota Apei<br>
+                      <small style="font-size: 0.7em; color: #7f8c8d;">(Nivel estimat)</small>
+                  </td>
+                  <td>
+                      <strong>{{ selectedDay.details?.waterLevel }} cm</strong>
+                  </td>
+              </tr>
+              <tr>
+                  <td> Presiune Atm.</td>
+                  <td>{{ selectedDay.details?.avgPressure }} hPa</td>
+              </tr>
+              <tr>
+                  <td> Vânt (Mediu)</td>
+                  <td>{{ selectedDay.details?.avgWind }} km/h</td>
+              </tr>
+          </tbody>
+      </table>
 
-
-   <h4 style="color: #2c3e50; margin-bottom: 15px;">📊 Factorii zilei (Medii)</h4>
-    <table class="factors-table">
-        <thead>
-            <tr>
-                <th>Factor</th>
-                <th>Valoare</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td> Faza Lunii</td>
-                <td>{{ selectedDay.details?.moonText }}</td>
-                
-            </tr>
-
-            <tr>
-                <td> Variație Cote</td>
-                <td>
-                    {{ selectedDay.details?.waterVariation > 0 ? '+' : '' }}{{ selectedDay.details?.waterVariation }} cm
-                </td>
-                
-              
-                
-            </tr>
-
-            <tr>
-                <td>
-                     Cota Apei<br>
-                    <small style="font-size: 0.7em; color: #7f8c8d;">(Nivel estimat)</small>
-                </td>
-                <td>
-                    <strong>{{ selectedDay.details?.waterLevel }} cm</strong>
-                </td>
-                
-            </tr>
-            <tr>
-                <td> Presiune Atm.</td>
-                <td>{{ selectedDay.details?.avgPressure }} hPa</td>
-            </tr>
-            <tr>
-                <td> Vânt (Mediu)</td>
-                <td>{{ selectedDay.details?.avgWind }} km/h</td>
-              
-              
-            </tr>
-        </tbody>
-    </table>
-
-    <h4 style="color: #2c3e50; margin: 25px 0 15px 0;">⏰ Evoluție orară</h4>
-    <div class="hourly-list">
-        <div class="hour-item" *ngFor="let hour of selectedDay.hourlyData">
-            <span class="time">{{ hour.time }}</span>
-            <img [src]="'http://openweathermap.org/img/wn/' + hour.icon + '.png'" width="30">
-            <span class="temp">{{ hour.temp }}°C</span>
-            <div class="hour-bar">
-                <div class="fill" [style.width.%]="hour.score" [style.background]="hour.score > 60 ? '#27ae60' : '#e74c3c'"></div>
-            </div>
-            <span class="score-val">{{ hour.score }}%</span>
-        </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="showMapModal">
+      <h4 style="color: #2c3e50; margin: 25px 0 15px 0;"> Evoluție orară</h4>
+      <div class="hourly-list">
+          <div class="hour-item" *ngFor="let hour of selectedDay.hourlyData">
+              <span class="time">{{ hour.time }}</span>
+              <img [src]="'http://openweathermap.org/img/wn/' + hour.icon + '.png'" width="30">
+              <span class="temp">{{ hour.temp }}°C</span>
+              <div class="hour-bar">
+                  <div class="fill" [style.width.%]="hour.score" [style.background]="hour.score > 60 ? '#27ae60' : '#e74c3c'"></div>
+              </div>
+              <span class="score-val">{{ hour.score }}%</span>
+          </div>
+      </div>
+    </div> </div> </div> <div class="modal-overlay" *ngIf="showMapModal">
     <div class="modal-content">
         <h3>Alege locația</h3>
         <div id="picker-map"></div>
