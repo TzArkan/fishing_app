@@ -10,7 +10,7 @@ import { Map } from './components/map/map';
 import { CalendarComponent} from './components/calendar/calendar';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password';
 import { authGuard } from './guards/auth-guard';
-
+import { EncyclopediaComponent } from './components/encyclopedia/encyclopedia';
 
 export const routes: Routes = [
   // --- RUTE PUBLICE (Oricine le poate accesa) ---
@@ -50,6 +50,7 @@ export const routes: Routes = [
     component: Map, 
     canActivate: [authGuard] 
   },
+  { path: 'enciclopedie', component: EncyclopediaComponent, canActivate: [authGuard] },
   { 
     path: 'calendar', 
     component: CalendarComponent, 

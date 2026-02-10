@@ -1,0 +1,92 @@
+<div class="page-wrapper">
+  
+  <div class="glass-card encyclopedia-container">
+    
+    <div class="header-section">
+      <h2>📖 Enciclopedia Peștilor</h2>
+      
+      <div class="filters">
+        <button [class.active]="activeFilter === 'all'" (click)="filter('all')">Toți</button>
+        <button [class.active]="activeFilter === 'freshwater'" (click)="filter('freshwater')">Apă Dulce</button>
+        <button [class.active]="activeFilter === 'saltwater'" (click)="filter('saltwater')">Marea Neagră</button>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-msg">
+      🎣 Se încarcă informațiile biologice...
+    </div>
+
+    <div class="fish-grid" *ngIf="!isLoading">
+      <div class="fish-card" *ngFor="let fish of filteredFish" (click)="openModal(fish)">
+        <div class="card-img">
+          <img [src]="fish.image" [alt]="fish.nameRo">
+        </div>
+        <div class="card-info">
+          <h3>{{ fish.nameRo }}</h3>
+          <span class="sci-name">{{ fish.nameSci }}</span>
+          <div class="tags">
+            <span class="tag">{{ fish.diet }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="selectedFish" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()"> <button class="close-btn" (click)="closeModal()">×</button>
+    
+    <div class="modal-layout">
+      <div class="modal-img">
+        <img [src]="selectedFish.image" [alt]="selectedFish.nameRo">
+      </div>
+      
+      <div class="modal-details">
+        <h2>{{ selectedFish.nameRo }}</h2>
+        <p class="sci-name-modal">{{ selectedFish.nameSci }} • {{ selectedFish.family }}</p>
+        
+        <div class="badges">
+            <span class="badge habitat" [ngClass]="selectedFish.habitatType">
+                {{ selectedFish.habitatType === 'freshwater' ? 'Apă Dulce' : 'Apă Sărată' }}
+            </span>
+        </div>
+
+        <div class="legal-box">
+            <div class="legal-item">
+                <span class="icon">📏</span>
+                <div>
+                    <strong>Limită Minimă</strong>
+                    <span>{{ selectedFish.legalLimit }}</span>
+                </div>
+            </div>
+            <div class="legal-item">
+                <span class="icon">🚫</span>
+                <div>
+                    <strong>Prohibiție</strong>
+                    <span class="danger-text">{{ selectedFish.prohibition }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="short-desc">
+            <em>"{{ selectedFish.shortDescription }}"</em>
+        </div>
+
+        <div class="info-block">
+            <h4>Biologie & Comportament</h4>
+            <p>{{ selectedFish.description | slice:0:350 }}... <a [href]="selectedFish.wikiLink" target="_blank">Citește pe Wikipedia</a></p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat">
+                <strong>Dimensiune Max:</strong><br> {{ selectedFish.maxSize }}
+            </div>
+            <div class="stat">
+                <strong>Dietă:</strong><br> {{ selectedFish.diet }}
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

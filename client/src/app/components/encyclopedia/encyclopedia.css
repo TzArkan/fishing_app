@@ -1,0 +1,226 @@
+/* --- FUNDAL & GLASSMORPHISM (Identic cu Calendar/Login) --- */
+.page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 0;
+}
+
+.glass-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 1000px; /* Mai lat pentru Grid */
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* --- HEADER & FILTRE --- */
+.header-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+h2 { color: #2c3e50; font-family: 'Poppins', sans-serif; font-weight: 700; margin-bottom: 20px; }
+
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filters button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  background: #dfe6e9;
+  color: #636e72;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.filters button.active, .filters button:hover {
+  background: #27ae60;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* --- GRID --- */
+.fish-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.fish-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.fish-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+
+.card-img {
+  height: 180px; /* Mărim puțin înălțimea pentru a avea loc */
+  background: #ffffff; /* Fundal alb curat */
+  overflow: hidden;
+  display: flex; /* Centram imaginea */
+  align-items: center;
+  justify-content: center;
+  padding: 10px; /* Puțin spațiu în jur */
+  border-bottom: 1px solid #eee;
+}
+
+.card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ⚠️ ASTA REZOLVĂ PROBLEMA: Arată toată poza, nu face zoom/crop */
+  transition: transform 0.3s ease;
+}
+.card-info { padding: 15px; text-align: center; }
+.card-info h3 { margin: 0; font-size: 1.1rem; color: #2d3436; }
+.sci-name { font-style: italic; color: #b2bec3; font-size: 0.8rem; display: block; margin-bottom: 5px; }
+.tag { background: #e3f2fd; color: #0984e3; padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; }
+
+.fish-card:hover .card-img img {
+    transform: scale(1.1); 
+}
+
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); z-index: 9999;
+  display: flex; justify-content: center; align-items: center;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: white;
+  width: 90%; max-width: 800px;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.close-btn {
+  position: absolute; top: 15px; right: 20px;
+  background: none; border: none; font-size: 2rem; cursor: pointer; color: white;
+  z-index: 10;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.modal-layout { display: flex; flex-direction: column; }
+
+.modal-img { 
+  background: #ffffff; /* Fundal alb */
+  width: 100%; 
+  height: auto; 
+  min-height: 300px; /* Înălțime minimă */
+  max-height: 400px; /* Înălțime maximă ca să nu fie uriașă */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-img img { 
+  width: 100%; 
+  height: 100%; 
+  max-height: 350px; /* Limităm înălțimea pozei */
+  object-fit: contain; /* ⚠️ ASTA REZOLVĂ PROBLEMA: Se vede tot peștele */
+  border-radius: 10px;
+}
+
+.modal-details { padding: 30px; }
+
+.habitat.freshwater { background: #55efc4; color: #006266; }
+.habitat.saltwater { background: #74b9ff; color: #0984e3; }
+.badge { padding: 5px 12px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; }
+
+.info-block { margin: 20px 0; line-height: 1.6; color: #636e72; }
+.info-block a { color: #0984e3; text-decoration: none; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f1f2f6; padding: 15px; border-radius: 10px; }
+
+@media(min-width: 768px) {
+  .modal-img { 
+      width: 45%; /* Imaginea ocupă 45% din lățime */
+      height: auto;
+      border-right: 1px solid #eee; /* Linie despărțitoare fină */
+  }
+}
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.legal-box {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    padding: 15px;
+    background: #fff3cd; /* Galben pal (stil avertisment) */
+    border-left: 5px solid #ffc107;
+    border-radius: 8px;
+}
+
+.legal-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.legal-item .icon {
+    font-size: 1.5rem;
+}
+
+.legal-item strong {
+    display: block;
+    font-size: 0.8rem;
+    color: #856404;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legal-item span {
+    font-weight: bold;
+    color: #333;
+}
+
+.danger-text {
+    color: #e74c3c !important; /* Roșu pentru prohibiție */
+}
+
+/* Stil descriere scurtă */
+.short-desc {
+    font-size: 1.05rem;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-left: 10px;
+    border-left: 3px solid #3498db;
+    font-style: italic;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+}
