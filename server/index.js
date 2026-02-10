@@ -580,14 +580,35 @@ app.get('/api/capturi/single/:id', async (req, res) => {
         res.status(500).send("Eroare server");
     }
 });
-
 app.delete('/api/capturi/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        const requesterId = req.query.adminId;
+
+        const captureCheck = await pool.query("SELECT user_id, specie FROM capturi WHERE id = $1", [id]);
+        
+        if (captureCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Captura nu există." });
+        }
+
+        const ownerId = captureCheck.rows[0].user_id;
+        const specie = captureCheck.rows[0].specie;
+
         await pool.query("DELETE FROM capturi WHERE id = $1", [id]);
-        res.json({ message: "Captura ștearsă!" });
+
+        if (requesterId && parseInt(requesterId) !== ownerId) {
+            const message = `⚠️ Administratorul a șters postarea ta cu captura "${specie}" deoarece încălca regulamentul comunității.`;
+            
+            await pool.query(
+                "INSERT INTO notifications (user_id, message) VALUES ($1, $2)", 
+                [ownerId, message]
+            );
+        }
+
+        res.json({ message: "Captura ștearsă și utilizatorul a fost notificat (dacă a fost cazul)." });
+
     } catch (err) {
-        console.error(err.message);
+        console.error("Eroare ștergere:", err);
         res.status(500).send("Eroare server");
     }
 });
@@ -713,7 +734,6 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = userResult.rows[0];
-
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
@@ -725,7 +745,21 @@ app.post('/api/login', async (req, res) => {
             await pool.query('INSERT INTO profiles (user_id) VALUES ($1)', [user.id]);
         }
 
-        res.json({ success: true, user: user });
+        // --- NOU: VERIFICĂM DACĂ ARE NOTIFICĂRI ---
+        const notifications = await pool.query("SELECT message FROM notifications WHERE user_id = $1", [user.id]);
+        
+        // Dacă are notificări, le ștergem din baza de date ca să nu apară la infinit
+        if (notifications.rows.length > 0) {
+            await pool.query("DELETE FROM notifications WHERE user_id = $1", [user.id]);
+        }
+
+        // Trimitem userul + lista de mesaje (dacă există)
+        res.json({ 
+            success: true, 
+            user: user, 
+            notifications: notifications.rows // Array cu mesaje
+        });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send("Eroare server");
@@ -889,4 +923,64 @@ app.post('/api/profile/avatar/:userId', upload.single('avatar'), async (req, res
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
     console.log(`Cale Uploads configurată la: ${uploadDir}`);
+});
+
+app.post('/api/reports', upload.single('poza'), async (req, res) => {
+    try {
+        const { userId, latitude, longitude, locationText, description, date } = req.body;
+        
+        // 1. Gestionăm poza
+        let photoUrl = null;
+        if (req.file) {
+            photoUrl = 'uploads/' + req.file.filename;
+        }
+
+        // 2. Curățăm datele (userId poate veni ca string "null")
+        const finalUserId = (userId && userId !== 'null' && !isNaN(userId)) ? userId : null;
+
+        // 3. Salvăm în baza de date (inclusiv photo_url)
+        // ATENȚIE: Asigură-te că ai coloana 'photo_url' în tabelul reports!
+        // Dacă nu o ai, rulează în SQL: ALTER TABLE reports ADD COLUMN photo_url VARCHAR(255);
+        const newReport = await pool.query(
+            `INSERT INTO reports (user_id, latitude, longitude, location_text, description, date_incident, photo_url, status) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') RETURNING *`,
+            [finalUserId, latitude, longitude, locationText, description, date, photoUrl]
+        );
+        
+        res.json(newReport.rows[0]);
+    } catch (err) {
+        console.error("Eroare salvare raport:", err.message);
+        res.status(500).send("Server Error: " + err.message);
+    }
+});
+
+// 2. CITIRE RAPOARTE (Admin)
+app.get('/api/reports', async (req, res) => {
+    try {
+        // Luăm rapoartele + numele celui care a raportat (dacă există)
+        const allReports = await pool.query(`
+            SELECT reports.*, users.nume as reporter_name 
+            FROM reports 
+            LEFT JOIN users ON reports.user_id = users.id 
+            ORDER BY created_at DESC
+        `);
+        res.json(allReports.rows);
+    } catch (err) {
+        console.error("Eroare citire rapoarte:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
+// 3. ACTUALIZARE STATUS (Admin)
+app.put('/api/reports/:id', async (req, res) => {
+    try {
+        const { status } = req.body; // 'verified' sau 'rejected'
+        const { id } = req.params;
+        
+        await pool.query("UPDATE reports SET status = $1 WHERE id = $2", [status, id]);
+        res.json({ message: "Status actualizat!" });
+    } catch (err) {
+        console.error("Eroare update status:", err.message);
+        res.status(500).send("Server Error");
+    }
 });

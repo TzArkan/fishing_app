@@ -1,1 +1,89 @@
-<p>legislation works!</p>
+<div class="page-wrapper">
+  <div class="glass-card main-container">
+    
+    <div class="header-section">
+      <h2>⚖️ Legislație & Raportare</h2>
+    </div>
+
+    <div class="tabs">
+      <button [class.active]="activeTab === 'laws'" (click)="switchTab('laws')" class="tab-btn laws-btn">📖 Legi</button>
+      <button [class.active]="activeTab === 'report'" (click)="switchTab('report')" class="tab-btn report-btn">📢 Raportează</button>
+    </div>
+
+    <div *ngIf="activeTab === 'laws'" class="laws-grid fade-in">
+      <div class="law-card" *ngFor="let law of laws">
+        <div class="law-header">
+          <div class="law-icon">{{ law.icon }}</div>
+          <h3>{{ law.title }}</h3>
+        </div>
+        <div class="law-content">
+          <ul><li *ngFor="let point of law.content">{{ point }}</li></ul>
+        </div>
+        <div class="law-warning">
+           ⚠️ {{ law.warning }}
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'report'" class="report-section fade-in">
+      <div class="alert-box">
+          <strong>⚠️ URGENT:</strong> Pentru fapte cu violență sau braconaj industrial, sunați la <strong>112</strong>!
+      </div>
+
+      <form (ngSubmit)="submitReport()">
+        
+        <div class="form-group location-group">
+          <label>📍 Locația Incidentului</label>
+          <div class="input-with-btn">
+            <input type="text" [(ngModel)]="reportData.locationText" name="location" 
+                   placeholder="Apasă butonul pentru a alege pe hartă..." readonly required>
+            <button type="button" (click)="openMapPicker()" class="map-btn">🗺️ Alege Locul</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>📅 Data Faptei</label>
+          <input type="date" [(ngModel)]="reportData.date" name="date" [max]="maxDate" required>
+        </div>
+
+        <div class="form-group">
+            <label>📸 Dovadă Foto (Opțional)</label>
+            <div class="file-upload-wrapper">
+                <input type="file" (change)="onFileSelected($event)" accept="image/*" id="fileInput" class="custom-file-input">
+                
+                <p *ngIf="selectedFile" style="color: #27ae60; font-weight: bold; margin-top: 5px; font-size: 0.9em;">
+                     Fișier pregătit: {{ selectedFile.name }}
+                </p>
+            </div>
+        </div>
+
+        <div class="form-group">
+          <label>📝 Descriere Detaliată</label>
+          <textarea [(ngModel)]="reportData.description" name="description" rows="4" 
+                    placeholder="Ce s-a întâmplat? Ce unelte foloseau? Câte persoane erau?" required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Trimite Raportul</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<div *ngIf="showMapModal" class="map-overlay">
+  <div class="map-content">
+    
+    <div class="map-header">
+      <h3>Mută markerul pe locul faptei</h3>
+      <button class="close-x" (click)="closeMapModal()">✕</button>
+    </div>
+
+    <div id="legislation-map" class="map-container"></div>
+
+    <div class="map-footer">
+        <button class="cancel-btn" (click)="closeMapModal()">Anulează</button>
+        <button class="confirm-btn" (click)="confirmLocation()">✅ Confirmă Locația</button>
+    </div>
+
+  </div>
+</div>

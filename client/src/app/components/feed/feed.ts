@@ -17,6 +17,7 @@ export class FeedComponent implements OnInit {
   
   // Aici ținem ID-ul, exact ca în history.ts
   currentUserId: number | null = null; 
+  currentUser: any = null; // Obiectul complet user (pentru a verifica rolul)
 
   constructor(
     private service: FishingService, 
@@ -26,6 +27,15 @@ export class FeedComponent implements OnInit {
 
   ngOnInit() {
     this.loadCurrentUser(); // Citim userul înainte să încărcăm feed-ul
+    
+    // Citim și obiectul complet pentru a verifica rolul de admin
+    if (isPlatformBrowser(this.platformId)) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            this.currentUser = JSON.parse(userStr);
+        }
+    }
+
     this.loadFeed();
   }
 
@@ -45,7 +55,7 @@ export class FeedComponent implements OnInit {
       }
     }
   }
-
+  
   loadFeed() {
     this.service.getFeed().subscribe({
       next: (data: any) => {
@@ -71,11 +81,13 @@ export class FeedComponent implements OnInit {
     }
 
     const isLiked = post.liked_by_current_user;
+    // Optimistic UI update
     post.liked_by_current_user = !isLiked;
-    post.likes_count += isLiked ? -1 : 1;
+    post.likes_count += !isLiked ? 1 : -1;
 
     this.service.toggleLike(post.id, this.currentUserId).subscribe({
       error: () => {
+        // Revert dacă e eroare
         post.liked_by_current_user = isLiked;
         post.likes_count += isLiked ? 1 : -1;
         alert("Eroare la like.");
@@ -107,12 +119,15 @@ export class FeedComponent implements OnInit {
     }
 
     this.service.addComment(post.id, this.currentUserId, text).subscribe({
-      next: (newComment) => {
+      next: (newComment: any) => {
         if (!post.comments) post.comments = [];
         
+        // Dacă backend-ul returnează comentariul, îl folosim
+        // Altfel, construim unul local pentru afișare rapidă
         post.comments.push({
-          ...newComment,
+          ...newComment, // presupunem că backend-ul returnează tot obiectul
           user_name: currentUserName, 
+          // user_avatar: ... (dacă ai avatarul userului curent îl poți pune aici)
           created_at: new Date()
         });
         
@@ -142,5 +157,35 @@ export class FeedComponent implements OnInit {
   getAvatar(cale: string): SafeUrl {
     if (!cale) return 'https://ui-avatars.com/api/?background=random&name=User';
     return this.getSanitizedUrl(cale);
+  }
+
+  // --- ADMIN: ȘTERGERE CU NOTIFICARE (NOU) ---
+  
+  // Helper pentru HTML
+  isAdmin(): boolean {
+      return this.currentUser && this.currentUser.role === 'admin';
+  }
+
+  deletePostByAdmin(post: any) {
+    if (!this.isAdmin()) {
+        alert("Nu ai permisiunea să faci asta!");
+        return;
+    }
+
+    if (!confirm('⚠️ Ești sigur că vrei să ștergi postarea? Utilizatorul va primi o notificare de avertisment.')) {
+        return;
+    }
+
+    // Apelăm serviciul cu ID-ul adminului (this.currentUserId)
+    this.service.deleteCaptura(post.id, this.currentUserId!).subscribe({
+        next: () => {
+            alert('Postare eliminată. Utilizatorul a fost notificat.');
+            this.loadFeed(); // Reîncărcăm feed-ul
+        },
+        error: (err) => {
+            console.error(err);
+            alert('Eroare la ștergere.');
+        }
+    });
   }
 }

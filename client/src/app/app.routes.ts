@@ -11,25 +11,28 @@ import { CalendarComponent} from './components/calendar/calendar';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password';
 import { authGuard } from './guards/auth-guard';
 import { EncyclopediaComponent } from './components/encyclopedia/encyclopedia';
+import { LegislationComponent } from './components/legislation/legislation';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard';
 
 export const routes: Routes = [
-  // --- RUTE PUBLICE (Oricine le poate accesa) ---
+
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'resetare-parola', component: ForgotPasswordComponent },
 
-  // --- RUTE PROTEJATE (Doar utilizatorii logați pot intra) ---
   { 
     path: 'feed', 
     component: FeedComponent, 
-    canActivate: [authGuard] // <--- Aici intervine gardianul
+    canActivate: [authGuard] 
   },
+  { path: 'legislatie', component: LegislationComponent },
   { 
     path: 'istoric', 
     component: HistoryComponent, 
     canActivate: [authGuard] 
   },
+  { path: 'admin', component: AdminDashboardComponent },
   { 
     path: 'adauga', 
     component: AddCatchComponent, 

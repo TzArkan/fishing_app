@@ -1,0 +1,30 @@
+.admin-container { padding: 30px; background: #f4f6f9; min-height: 100vh; }
+.header { margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
+.header h1 { color: #2c3e50; }
+
+.table-wrapper { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #2d3436; color: white; }
+
+.map-btn {
+  background: #0984e3; color: white; border: none; padding: 5px 10px; 
+  border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-bottom: 5px;
+}
+
+.badge { padding: 5px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; }
+.badge.pending { background: #ffeaa7; color: #d35400; }
+.badge.verified { background: #55efc4; color: #00b894; }
+.badge.rejected { background: #fab1a0; color: #d63031; }
+
+/* Rândul devine verde dacă e verificat */
+tr.verified { background-color: #f0fff4; }
+
+.actions button {
+  border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-right: 5px; font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+.actions button:hover { transform: scale(1.1); }
+.btn-verify { background: #e6fffa; border: 1px solid #38b2ac; }
+.btn-reject { background: #fff5f5; border: 1px solid #e53e3e; }

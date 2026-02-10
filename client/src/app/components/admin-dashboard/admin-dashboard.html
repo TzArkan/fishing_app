@@ -1,0 +1,101 @@
+<div class="admin-container">
+  
+  <div class="header">
+    <h1>🚓 Panou Control - Poliția Deltei</h1>
+    <p>Monitorizare sesizări braconaj și incidente în timp real.</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    Se încarcă sesizările...
+  </div>
+
+  <div *ngIf="!isLoading" class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Data Incident</th>
+          <th>Ora Primirii</th> <th>Raportat de</th>
+          <th>Locație</th>
+          <th>Dovadă Foto</th> <th>Descriere</th>
+          <th>Status</th>
+          <th>Acțiuni</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rep of reports" [class.verified]="rep.status === 'verified'" [class.rejected]="rep.status === 'rejected'">
+          
+          <td>
+            <strong>{{ rep.date_incident | date:'dd.MM.yyyy' }}</strong>
+          </td>
+
+          <td>
+            <div style="font-weight: bold; color: #d63031; font-size: 1.1em;">
+                {{ rep.created_at | date:'HH:mm' }}
+            </div>
+            <div style="font-size: 0.8em; color: #666;">
+                {{ rep.created_at | date:'dd.MM.yyyy' }}
+            </div>
+          </td>
+
+          <td>
+            {{ rep.reporter_name || 'Anonim' }}
+            <div *ngIf="rep.user_id" style="font-size: 0.8em; color: #888;">ID: {{ rep.user_id }}</div>
+          </td>
+
+          <td>
+            <button class="map-btn" (click)="openGoogleMaps(rep.latitude, rep.longitude)">
+               Vezi Harta
+            </button>
+            <div class="coords-text" title="{{ rep.location_text }}">
+                {{ rep.location_text | slice:0:30 }}{{ rep.location_text.length > 30 ? '...' : '' }}
+            </div>
+          </td>
+
+          <td>
+             <div *ngIf="rep.photo_url" class="photo-cell">
+                <a [href]="'http://localhost:5000/' + rep.photo_url" target="_blank">
+                   <img [src]="'http://localhost:5000/' + rep.photo_url" 
+                        alt="Dovadă"
+                        style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 2px solid #eee;">
+                   <br><small> Zoom</small>
+                </a>
+             </div>
+             <span *ngIf="!rep.photo_url" style="color: #bbb; font-style: italic;">Fără Poză</span>
+          </td>
+
+          <td style="max-width: 250px;">
+            {{ rep.description }}
+          </td>
+          
+          <td>
+            <span class="badge" [ngClass]="rep.status">
+              {{ rep.status === 'pending' ? 'NOU ⚠️' : (rep.status === 'verified' ? 'CONFIRMAT ✅' : 'RESPINS ❌') }}
+            </span>
+          </td>
+          
+          <td class="actions">
+            <div *ngIf="rep.status === 'pending'" style="display: flex; gap: 5px;">
+                <button (click)="verifyReport(rep.id)" class="btn-verify" title="Confirmă și trimite echipaj">
+                     Confirmă
+                </button>
+                <button (click)="rejectReport(rep.id)" class="btn-reject" title="Marchează ca fals">
+                     Respinge
+                </button>
+            </div>
+            <div *ngIf="rep.status !== 'pending'" style="font-size: 0.9em; color: #555;">
+                <i>Finalizat</i>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="reports.length === 0" class="no-data">
+      <h3>Nu există sesizări recente.</h3>
+      <p>Ape curate! 🌊</p>
+    </div>
+
+  </div>
+</div>

@@ -9,11 +9,21 @@
   <div *ngFor="let post of posts" class="feed-card">
     
     <div class="card-header">
-      <img [src]="getAvatar(post.pescar_avatar)" class="user-avatar">
-      <div class="header-info">
-        <span class="username">{{ post.pescar_nume }}</span>
-        <span class="date">{{ post.created_at | date:'shortDate' }}</span>
+      <div style="display: flex; align-items: center; gap: 10px;">
+          <img [src]="getAvatar(post.pescar_avatar)" class="user-avatar">
+          <div class="header-info">
+            <span class="username">{{ post.pescar_nume }}</span>
+            <span class="date">{{ post.created_at | date:'shortDate' }}</span>
+          </div>
       </div>
+
+      <button *ngIf="currentUser && currentUser.role === 'admin'" 
+              (click)="deletePostByAdmin(post)" 
+              title="Șterge Postarea (Admin)"
+              style="background: transparent; border: 1px solid red; color: red; border-radius: 4px; cursor: pointer; padding: 2px 8px; font-size: 0.8rem;">
+           Șterge
+      </button>
+
     </div>
 
     <div class="card-image">
@@ -61,10 +71,7 @@
                 <strong>{{ comment.user_name }}:</strong> {{ comment.text }}
             </div>
         </div>
-        <div *ngIf="!post.comments || post.comments.length === 0" class="no-comments">
-            <small>Fii primul care comentează!</small>
-        </div>
-
+        
         <div class="add-comment">
             <input type="text" 
                    [(ngModel)]="post.newCommentText" 
@@ -76,6 +83,5 @@
       </div>
 
     </div>
-
   </div>
 </div>

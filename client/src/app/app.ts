@@ -1,11 +1,10 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, Router, NavigationEnd, RouterLink } from '@angular/router'; // <--- 1. IMPORTĂ AICI RouterLink
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID } from '@angular/core'; // <--- IMPORTĂ Inject, PLATFORM_ID
+import { RouterOutlet, Router, NavigationEnd, RouterLink } from '@angular/router'; 
+import { CommonModule, isPlatformBrowser } from '@angular/common'; // <--- IMPORTĂ isPlatformBrowser
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  // 2. ADAUGĂ RouterLink MAI JOS ÎN LISTA DE IMPORTS
   imports: [RouterOutlet, CommonModule, RouterLink], 
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -13,23 +12,42 @@ import { CommonModule } from '@angular/common';
 export class App {
   title = 'Fishing App';
   showMenu: boolean = true;
+  currentUser: any = null;
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object // <--- INJECTĂM ID-UL PLATFORMEI
+  ) {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         const currentUrl = event.urlAfterRedirects;
-        // Ascunde meniul pe paginile de login/register
-        if (currentUrl.includes('/login') || currentUrl.includes('/register') ||currentUrl.includes('/resetare-parola') || currentUrl === '/') {
+        
+        if (currentUrl.includes('/login') || currentUrl.includes('/register') || currentUrl.includes('/resetare-parola') || currentUrl === '/') {
            this.showMenu = false;
         } else {
            this.showMenu = true;
+        }
+
+        // 👇 SOLUȚIA: Executăm asta DOAR dacă suntem în browser
+        if (isPlatformBrowser(this.platformId)) {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+              this.currentUser = JSON.parse(userStr);
+            } else {
+              this.currentUser = null;
+            }
         }
       }
     });
   }
 
   logout() {
-    localStorage.removeItem('user');
+    // Și aici e bine să verificăm, deși logout se face doar din browser de obicei
+    if (isPlatformBrowser(this.platformId)) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('userId');
+    }
+    this.currentUser = null;
     this.router.navigate(['/login']);
   }
 }

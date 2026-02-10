@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs'; // <--- 1. IMPORT IMPORTANT: 'of'
+import { Observable, of } from 'rxjs'; 
 import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
@@ -68,10 +68,14 @@ export class FishingService {
     return this.http.get<any[]>(`${this.baseUrl}/capturi?userId=${userId}`);
   }
 
-  deleteCaptura(id: number) {
-    return this.http.delete(`${this.baseUrl}/capturi/${id}`);
+deleteCaptura(id: number, adminId?: number) {
+    // Trimitem adminId ca parametru (query param)
+    let url = `${this.baseUrl}/capturi/${id}`;
+    if (adminId) {
+        url += `?adminId=${adminId}`;
+    }
+    return this.http.delete(url);
   }
-
   getCatchById(id: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/capturi/single/${id}`);
   }
@@ -106,18 +110,36 @@ export class FishingService {
 
   deleteSpot(id: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/spots/${id}`);
-}
+  }
 
-getForecast(lat: number, lng: number): Observable<any> {
+  getForecast(lat: number, lng: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/forecast`, { latitude: lat, longitude: lng });
-}
+  }
 
-requestPasswordReset(email: string) {
+  requestPasswordReset(email: string) {
     return this.http.post(`${this.baseUrl}/forgot-password`, { email });
-}
+  }
 
-confirmPasswordReset(data: any) {
+  confirmPasswordReset(data: any) {
     return this.http.post(`${this.baseUrl}/reset-password`, data);
-}
+  }
+  
+  sendReport(reportData: any) {
+    return this.http.post(`${this.baseUrl}/reports`, reportData);
+  }
+
+  // Adaugă metoda pentru admin (să vadă rapoartele)
+  getAllReports(): Observable<any> { // Am adaugat tipul returnat pentru siguranță
+    if (!isPlatformBrowser(this.platformId)) {
+        // ⚠️ AICI AM MODIFICAT: Returnăm [] în loc de null ca să nu crape tabelul
+        return of([]); 
+    }
+    return this.http.get(`${this.baseUrl}/reports`);
+  }
+
+  // Adaugă metoda pentru a actualiza statusul
+  updateReportStatus(id: number, status: string) {
+    return this.http.put(`${this.baseUrl}/reports/${id}`, { status });
+  }
 
 }
