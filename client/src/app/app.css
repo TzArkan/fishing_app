@@ -38,3 +38,81 @@
 .btn-logout:hover {
   background-color: #c0392b;
 }
+
+/* Butonul de Setări (Rotund și elegant) */
+.btn-settings {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-settings:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg); /* Efect simpatic de rotire la hover */
+}
+
+/* Containerul Dropdown-ului */
+.dropdown-content {
+    position: absolute;
+    right: 0;
+    top: 50px; /* Imediat sub buton */
+    background-color: white;
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    z-index: 1000;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Informații user în meniu */
+.user-info-small {
+    padding: 15px;
+    background: #f8f9fa;
+    color: #333;
+    font-size: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* Elementele din meniu */
+.dropdown-item {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f1f1;
+    color: #3498db;
+}
+
+/* Stil specific pentru Logout */
+.logout-item {
+    color: #e74c3c;
+    border-top: 1px solid #eee;
+}
+
+.logout-item:hover {
+    background-color: #ffeaea;
+    color: #c0392b;
+}
+
+/* Animație simplă */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

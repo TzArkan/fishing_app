@@ -1,0 +1,83 @@
+<div class="full-screen-bg"></div>
+
+<div *ngIf="!userData" style="text-align: center; padding: 50px;">
+    <h2>⏳ Se încarcă...</h2>
+    <p>Dacă mesajul persistă, userul cu ID-ul {{ profileId }} nu a fost găsit.</p>
+</div>
+
+<div class="profile-container" *ngIf="userData">
+
+  <div class="profile-cover">
+    <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Cover">
+  </div>
+  
+  <div class="profile-header">
+    <div class="avatar-section">
+        <img [src]="userData.profile.avatar_url ? 'http://localhost:5000/' + userData.profile.avatar_url : 'https://ui-avatars.com/api/?name=' + userData.user.nume" 
+             class="big-avatar">
+    </div>
+    
+    <div class="info-section">
+        <h1>{{ userData.user.nume }}</h1>
+        <p class="bio">{{ userData.profile.bio || 'Fără descriere.' }}</p>
+        <p class="stats">🎣 {{ capturi.length }} Capturi postate</p>
+
+        <div class="actions" *ngIf="myId !== profileId">
+            
+            <button *ngIf="friendStatus === 'none'" (click)="sendRequest()" class="btn-add">
+                ➕ Adaugă Prieten
+            </button>
+
+            <button *ngIf="friendStatus === 'pending' && isRequester" class="btn-pending" disabled>
+                ⏳ Cerere Trimisă
+            </button>
+
+            <button *ngIf="friendStatus === 'pending' && !isRequester" (click)="acceptRequest()" class="btn-accept">
+                ✅ Acceptă Cererea
+            </button>
+
+            <button *ngIf="friendStatus === 'accepted'" (click)="toggleChat()" class="btn-chat">
+                💬 Mesaj
+            </button>
+            
+            <button *ngIf="friendStatus === 'accepted'" (click)="unfriendUser()" class="btn-unfriend">
+                ❌ Unfriend
+            </button>
+            
+            <span *ngIf="friendStatus === 'accepted'" class="friend-badge">Prieten ✔️</span>
+        </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Galeria lui {{ userData.user.nume }}</h2>
+  <div class="grid-capturi">
+      <div *ngFor="let cap of capturi" class="grid-item">
+          <div class="image-wrapper">
+              <img [src]="'http://localhost:5000/' + cap.poza_url">
+          </div>
+          <div class="overlay">
+              <span>{{ cap.specie }} ({{ cap.lungime }} cm)</span>
+          </div>
+      </div>
+      <div *ngIf="capturi.length === 0" class="no-data">Acest pescar nu a postat încă nimic.</div>
+  </div>
+
+</div>
+
+<div class="chat-window" *ngIf="showChat">
+    <div class="chat-header">
+        <span>💬 {{ userData.user.nume }}</span>
+        <button (click)="toggleChat()">✕</button>
+    </div>
+    <div class="chat-body">
+        <div *ngFor="let msg of messages" class="message-bubble" [class.me]="msg.sender_id === myId">
+            {{ msg.message }}
+        </div>
+    </div>
+    <div class="chat-footer">
+        <input [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Scrie un mesaj...">
+        <button (click)="sendMessage()">➤</button>
+    </div>
+</div>

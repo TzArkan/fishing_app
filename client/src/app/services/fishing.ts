@@ -14,7 +14,32 @@ export class FishingService {
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object 
   ) {}
+  getPublicProfile(userId: number): Observable<any> {
+    if (!isPlatformBrowser(this.platformId)) return of(null);
+    return this.http.get(`${this.baseUrl}/users/${userId}/full-profile`);
+}
 
+checkFriendStatus(myId: number, otherId: number) {
+    return this.http.get(`${this.baseUrl}/friends/status?u1=${myId}&u2=${otherId}`);
+}
+
+sendFriendRequest(requesterId: number, addresseeId: number) {
+    return this.http.post(`${this.baseUrl}/friends/request`, { requesterId, addresseeId });
+}
+
+acceptFriendRequest(requesterId: number, addresseeId: number) { // requesterId e cel care a cerut prietenia
+    return this.http.put(`${this.baseUrl}/friends/accept`, { requesterId, addresseeId });
+}
+
+// --- CHAT ---
+getMessages(myId: number, otherId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/messages/${otherId}?myId=${myId}`);
+}
+
+
+sendMessage(senderId: number, receiverId: number, text: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/messages`, { senderId, receiverId, text });
+}
   // --- AUTH ---
   register(user: any, code: string) {
     const payload = { ...user, code }; 
@@ -42,7 +67,12 @@ export class FishingService {
     
     return this.http.get(`${this.baseUrl}/feed?userId=${userId}&ts=${timestamp}`);
   }
-
+  getIncomingRequests(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/friends/requests/${userId}`);
+}
+removeFriend(myId: number, friendId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/friends/unfriend/${myId}/${friendId}`);
+}
   // --- LIKE SYSTEM ---
   toggleLike(capturaId: number, userId: number) {
     return this.http.post(`${this.baseUrl}/capturi/${capturaId}/like`, { userId });
@@ -52,7 +82,31 @@ export class FishingService {
   addComment(capturaId: number, userId: number, text: string) {
     return this.http.post(`${this.baseUrl}/capturi/${capturaId}/comments`, { userId, text });
   }
+getSentRequests(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/friends/sent/${userId}`);
+}
+// Căutare useri
+searchUsers(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/users/search?query=${query}`);
+}
 
+// Lista conversații active
+getActiveConversations(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/messages/conversations/${userId}`);
+}
+
+// Obține mesajele cu un user specific (o ai deja, dar verifică să fie corectă)
+
+// Trimite mesaj (o ai deja)
+
+cancelRequest(friendshipId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/friends/cancel/${friendshipId}`);
+}
+
+// 3. Lista prieteni
+getFriendsList(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/friends/list/${userId}`);
+}
   // --- CAPTURI ---
   publishCaptura(id: number) {
     return this.http.put(`${this.baseUrl}/capturi/${id}/publish`, {});
@@ -123,7 +177,12 @@ deleteCaptura(id: number, adminId?: number) {
   confirmPasswordReset(data: any) {
     return this.http.post(`${this.baseUrl}/reset-password`, data);
   }
-  
+  respondToRequest(friendshipId: number, status: 'accepted' | 'declined'): Observable<any> {
+    return this.http.put(`${this.baseUrl}/friends/respond`, { friendshipId, status });
+}
+getSuggestions(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/friends/suggestions/${userId}`);
+}
   sendReport(reportData: any) {
     return this.http.post(`${this.baseUrl}/reports`, reportData);
   }

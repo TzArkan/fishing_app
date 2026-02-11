@@ -1,0 +1,481 @@
+/* --- 1. FUNDALUL FIX (Aici am reparat problema) --- */
+.full-screen-bg {
+    position: fixed; /* Rămâne pe loc când dai scroll */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh; /* 100% din înălțimea ecranului */
+    z-index: -1;   /* Stă în spatele scrisului */
+    
+    /* Imaginea ta */
+    background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+    background-size: cover; /* Acoperă tot fără spații albe */
+}
+
+/* --- 2. CONTAINER PRINCIPAL --- */
+.social-container {
+    max-width: 1000px;
+    margin: 40px auto; /* Spațiu sus/jos */
+    padding: 0 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- 3. SECȚIUNI (Transparente, doar cardurile sunt albe) --- */
+section {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 50px;
+}
+
+/* Titlurile cu fundal alb (Badge) */
+.section-header h3 {
+    background: #fff;
+    color: #2c3e50;
+    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 25px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    margin: 0 0 25px 5px;
+}
+
+.badge {
+    background: #e74c3c;
+    color: white;
+    font-size: 0.8rem;
+    padding: 3px 10px;
+    border-radius: 50px;
+}
+
+/* --- 4. LISTA CERERI --- */
+.request-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: #fff; /* Card alb */
+    border-radius: 16px;
+    margin-bottom: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); /* Umbră */
+    transition: transform 0.2s;
+}
+
+.request-card:hover {
+    transform: translateY(-3px);
+}
+
+.req-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.req-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f1f2f6;
+}
+
+.req-text strong {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    display: block;
+}
+
+.req-text span {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.req-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* --- 5. GRID SUGESTII --- */
+.suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 25px;
+}
+
+.sug-card {
+    background: #fff; /* Card alb */
+    border-radius: 16px;
+    padding: 25px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); /* Umbră */
+}
+
+.sug-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.sug-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 4px solid #f1f2f6;
+    transition: border-color 0.3s;
+}
+
+.sug-card:hover .sug-avatar {
+    border-color: #3498db;
+}
+
+.sug-content strong {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    display: block;
+    cursor: pointer;
+}
+
+.sug-bio {
+    font-size: 0.9rem;
+    color: #95a5a6;
+    margin-bottom: 20px;
+    height: 40px;
+    overflow: hidden;
+}
+
+/* --- 6. BUTOANE --- */
+button {
+    border: none;
+    border-radius: 8px;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    transition: background 0.2s;
+}
+
+.btn-confirm { background: #2ecc71; color: white; }
+.btn-confirm:hover { background: #27ae60; }
+
+.btn-delete { background: #ecf0f1; color: #636e72; }
+.btn-delete:hover { background: #dfe6e9; color: #d63031; }
+
+.btn-add-sug {
+    width: 100%;
+    background: #3498db;
+    color: white;
+    padding: 12px 0 !important;
+    margin-top: auto;
+}
+.btn-add-sug:hover { background: #2980b9; }
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+/* --- PRIETENI (Grid similar cu sugestiile dar mai compact) --- */
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.friend-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.friend-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 3px solid #2ecc71; /* Verde pt prieteni */
+}
+
+.friend-card strong {
+    display: block;
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.btn-msg {
+    background: #3498db;
+    color: white;
+    width: 100%;
+    font-size: 0.9rem !important;
+    padding: 8px !important;
+}
+
+/* --- CERERI TRIMISE (Listă simplă) --- */
+.sent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sent-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #eee;
+}
+
+.sent-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #555;
+}
+
+.small-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    opacity: 0.8;
+}
+
+.btn-cancel {
+    background: #95a5a6;
+    color: white;
+    font-size: 0.85rem !important;
+    padding: 8px 15px !important;
+}
+
+.btn-cancel:hover {
+    background: #7f8c8d;
+}
+
+/* --- STIL PENTRU LINK-URI (Clickable) --- */
+.clickable {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.clickable:hover {
+    color: #3498db !important; /* Se albăstrește când pui mouse-ul */
+}
+
+/* --- CERERI TRIMISE --- */
+.sent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sent-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.sent-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.small-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #bdc3c7;
+}
+
+.btn-cancel {
+    background: #95a5a6;
+    color: white;
+    padding: 8px 15px !important;
+    font-size: 0.85rem !important;
+}
+
+.btn-cancel:hover {
+    background: #7f8c8d;
+}
+
+/* --- GRID PRIETENI --- */
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.friend-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.friend-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 3px solid #2ecc71;
+}
+
+.btn-msg {
+    background: #3498db;
+    color: white;
+    width: 100%;
+    padding: 8px !important;
+    font-size: 0.9rem !important;
+    margin-top: 10px;
+}
+
+.social-search-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    /* Umbră fină să se separe de fundal */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+    margin-bottom: 30px;
+    position: relative; /* Context pentru dropdown */
+    z-index: 50; /* Asigură că bara de search e peste restul conținutului */
+}
+
+/* Stil pentru Input (Rotunjit și Mare) */
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #f0f2f5;
+    border-radius: 50px; /* Formă de pilulă */
+    padding: 5px 20px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.search-input-wrapper:focus-within {
+    background: #fff;
+    border-color: #3498db; /* Albastru când scrii */
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.search-icon {
+    font-size: 1.2rem;
+    margin-right: 10px;
+    color: #7f8c8d;
+}
+
+.search-input-wrapper input {
+    width: 100%; /* Ocupă tot spațiul */
+    padding: 12px 0;
+    border: none;
+    background: transparent;
+    font-size: 1.05rem;
+    outline: none;
+    color: #2c3e50;
+}
+
+.search-input-wrapper input::placeholder {
+    color: #95a5a6;
+}
+
+/* --- REZULTATE SEARCH (Dropdown) --- */
+.search-dropdown {
+    position: absolute;
+    top: 100%; /* Imediat sub bara de căutare */
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 10px;
+    
+    /* REPARATIA PENTRU SUPRAPUNERE: */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    z-index: 100; /* Plutește PESTE tot restul paginii */
+    border: 1px solid #eee;
+}
+
+.search-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.search-item:last-child { border-bottom: none; }
+
+.search-item:hover {
+    background: #f8f9fa;
+}
+
+.search-item img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+    border: 2px solid #eee;
+}
+
+.search-item strong {
+    flex: 1;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+/* Butoane mici din search */
+.btn-mini-add, .btn-mini-profile {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: transform 0.1s;
+}
+
+.btn-mini-add { background: #2ecc71; color: white; }
+.btn-mini-add:hover { background: #27ae60; }
+
+.btn-mini-profile { background: #ecf0f1; color: #7f8c8d; }
+.btn-mini-profile:hover { background: #dfe6e9; color: #333; }
+
+.btn-mini-add:active, .btn-mini-profile:active { transform: scale(0.95); }

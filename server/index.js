@@ -790,6 +790,7 @@ app.get('/api/feed', async (req, res) => {
         const feedQuery = `
             SELECT 
                 c.id, 
+                c.user_id,  -- <--- AM ADĂUGAT ASTA AICI. Fără el nu mergea click-ul!
                 c.specie, 
                 c.lungime, 
                 c.detalii, 
@@ -823,7 +824,7 @@ app.get('/api/feed', async (req, res) => {
                     ), '[]'
                 ) as comments,
 
-                -- Lista Tag-urilor (JSON array) - folosind tabela de legătură catch_tags
+                -- Lista Tag-urilor (JSON array)
                 COALESCE(
                     (SELECT json_agg(json_build_object('id', t.id, 'name', t.name))
                      FROM catch_tags ct
@@ -918,6 +919,319 @@ app.post('/api/profile/avatar/:userId', upload.single('avatar'), async (req, res
   }
 
   res.json({ avatar_url: avatarUrl });
+});
+
+app.get('/api/users/:id/full-profile', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Luăm datele de bază ale userului
+        const userRes = await pool.query(
+            "SELECT id, nume FROM users WHERE id = $1", 
+            [id]
+        );
+
+        if (userRes.rows.length === 0) {
+            return res.status(404).json({ message: "Utilizator negăsit" });
+        }
+
+        // 2. Luăm profilul (avatarul)
+        const profileRes = await pool.query(
+            "SELECT avatar_url, bio FROM profiles WHERE user_id = $1", 
+            [id]
+        );
+
+        // 3. Luăm DOAR capturile PUBLICE ale acestui user
+        const capturiRes = await pool.query(
+            `SELECT id, specie, lungime, detalii, poza_url, created_at 
+             FROM capturi 
+             WHERE user_id = $1 AND is_public = TRUE 
+             ORDER BY created_at DESC`, 
+            [id]
+        );
+
+        // Construim obiectul final pe care îl trimitem la Angular
+        res.json({
+            user: userRes.rows[0],
+            profile: profileRes.rows[0] || { avatar_url: null, bio: "Fără descriere." },
+            capturi: capturiRes.rows
+        });
+
+    } catch (err) {
+        // Această eroare va apărea în consola Docker (server-1 | ...)
+        console.error("❌ EROARE SQL LA PROFIL:", err.message); 
+        res.status(500).json({ error: "Eroare la server", details: err.message });
+    }
+});
+
+// --- 2. SISTEM PRIETENIE ---
+
+// Verifică statusul relației dintre 2 useri
+app.get('/api/friends/status', async (req, res) => {
+    const { u1, u2 } = req.query;
+    try {
+        // Căutăm orice relație între ei (indiferent cine a cerut)
+        const rel = await pool.query(
+            `SELECT * FROM friendships 
+             WHERE (requester_id = $1 AND addressee_id = $2) 
+                OR (requester_id = $2 AND addressee_id = $1)`,
+            [u1, u2]
+        );
+        res.json(rel.rows[0] || { status: 'none' });
+    } catch (err) { res.status(500).send(err.message); }
+});
+// --- ACEASTA ESTE RUTA CARE LIPSEA ---
+app.post('/api/friends/request', async (req, res) => {
+    try {
+        const { requesterId, addresseeId } = req.body;
+
+        if (!requesterId || !addresseeId) {
+            return res.status(400).json({ message: "ID-urile sunt obligatorii!" });
+        }
+
+        // Verificăm să nu existe deja o cerere sau prietenie
+        const check = await pool.query(
+            "SELECT * FROM friendships WHERE (requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1)",
+            [requesterId, addresseeId]
+        );
+
+        if (check.rows.length > 0) {
+            return res.status(409).json({ message: "Cererea există deja!" });
+        }
+
+        await pool.query(
+            "INSERT INTO friendships (requester_id, addressee_id, status) VALUES ($1, $2, 'pending')",
+            [requesterId, addresseeId]
+        );
+
+        res.json({ success: true, message: "Cerere trimisă!" });
+    } catch (err) {
+        console.error("Eroare friend request:", err.message);
+        res.status(500).send(err.message);
+    }
+});
+// Trimite cerere
+app.get('/api/friends/requests/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const query = `
+            SELECT f.id as friendship_id, u.id as user_id, u.nume, p.avatar_url 
+            FROM friendships f
+            JOIN users u ON f.requester_id = u.id
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE f.addressee_id = $1 AND f.status = 'pending'
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+// Acceptă cerere
+// 2. Acceptă sau Refuză o cerere
+app.put('/api/friends/respond', async (req, res) => {
+    try {
+        const { friendshipId, status } = req.body; // 'accepted' sau 'declined'
+        if (status === 'declined') {
+            await pool.query("DELETE FROM friendships WHERE id = $1", [friendshipId]);
+        } else {
+            await pool.query("UPDATE friendships SET status = 'accepted' WHERE id = $1", [friendshipId]);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+// --- 3. CHAT ---
+
+// Ia mesajele dintre 2 useri
+app.get('/api/messages/:otherUserId', async (req, res) => {
+    const { otherUserId } = req.params;
+    const myId = req.query.myId;
+    try {
+        const msgs = await pool.query(
+            `SELECT * FROM messages 
+             WHERE (sender_id = $1 AND receiver_id = $2) 
+                OR (sender_id = $2 AND receiver_id = $1)
+             ORDER BY created_at ASC`,
+            [myId, otherUserId]
+        );
+        res.json(msgs.rows);
+    } catch (err) { res.status(500).send(err.message); }
+});
+app.get('/api/friends/suggestions/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const query = `
+            SELECT u.id, u.nume, p.avatar_url, p.bio 
+            FROM users u
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE u.id != $1 
+            AND u.id NOT IN (
+                SELECT requester_id FROM friendships WHERE addressee_id = $1
+                UNION
+                SELECT addressee_id FROM friendships WHERE requester_id = $1
+            )
+            LIMIT 6;
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// În index.js
+app.delete('/api/friends/unfriend/:myId/:friendId', async (req, res) => {
+    try {
+        const { myId, friendId } = req.params;
+        
+        // Ștergem relația în ambele sensuri posibile
+        await pool.query(
+            `DELETE FROM friendships 
+             WHERE (requester_id = $1 AND addressee_id = $2) 
+                OR (requester_id = $2 AND addressee_id = $1)`,
+            [myId, friendId]
+        );
+        
+        res.json({ success: true, message: "Prietenie ștearsă" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+// A. Vezi cererile TRIMISE de mine (Pending)
+app.get('/api/friends/sent/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const query = `
+            SELECT f.id as friendship_id, u.id as user_id, u.nume, p.avatar_url 
+            FROM friendships f
+            JOIN users u ON f.addressee_id = u.id  -- Luăm datele CELUILALT (destinatarul)
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE f.requester_id = $1 AND f.status = 'pending'
+        `;
+        const result = await pool.query(query, [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// B. Anulează o cerere trimisă (Șterge după ID-ul prieteniei)
+app.delete('/api/friends/cancel/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query("DELETE FROM friendships WHERE id = $1", [id]);
+        res.json({ message: "Cerere anulată" });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// C. Lista de PRIETENI (Acceptați)
+app.get('/api/friends/list/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        // Această interogare e puțin mai complexă pentru că prietenia poate fi în ambele sensuri
+        const query = `
+            SELECT 
+                CASE 
+                    WHEN requester_id = $1 THEN addressee_id 
+                    ELSE requester_id 
+                END as id,
+                f.id as friendship_id
+            FROM friendships f
+            WHERE (requester_id = $1 OR addressee_id = $1) AND status = 'accepted'
+        `;
+        
+        // Luăm ID-urile prietenilor, apoi le luăm numele și pozele
+        const friendsIdsRes = await pool.query(query, [userId]); // Deoarece $1 este număr, query-ul trebuie adaptat ușor în JS sau SQL direct
+        // Varianta SQL directă și curată:
+        const fullQuery = `
+            SELECT u.id, u.nume, p.avatar_url, p.bio
+            FROM users u
+            JOIN friendships f ON (f.requester_id = u.id OR f.addressee_id = u.id)
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE (f.requester_id = $1 OR f.addressee_id = $1) 
+            AND f.status = 'accepted' 
+            AND u.id != $1
+        `;
+        
+        const result = await pool.query(fullQuery, [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+// --- A. CĂUTARE UTILIZATORI (Global) ---
+app.get('/api/users/search', async (req, res) => {
+    try {
+        const { query } = req.query; // ex: ?query=Ion
+        if (!query) return res.json([]);
+
+        const result = await pool.query(`
+            SELECT u.id, u.nume, p.avatar_url 
+            FROM users u
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE u.nume ILIKE $1 
+            LIMIT 5`, 
+            [`%${query}%`] // Căutare parțială (case-insensitive)
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// --- B. LISTA DE CONVERSAȚII ACTIVE ---
+// Această interogare returnează lista utilizatorilor cu care ai vorbit, ordonată după ultimul mesaj
+app.get('/api/messages/conversations/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const query = `
+            SELECT DISTINCT ON (partner_id)
+                CASE 
+                    WHEN sender_id = $1 THEN receiver_id 
+                    ELSE sender_id 
+                END as partner_id,
+                u.nume,
+                p.avatar_url,
+                m.message as last_message,
+                m.created_at
+            FROM messages m
+            JOIN users u ON u.id = (CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END)
+            LEFT JOIN profiles p ON u.id = p.user_id
+            WHERE sender_id = $1 OR receiver_id = $1
+            ORDER BY partner_id, m.created_at DESC
+        `;
+        
+        // Notă: SQL-ul de mai sus ia ultimul mesaj per partener. 
+        // Apoi, în frontend sau printr-un wrapper SQL, le poți sorta după 'created_at' global.
+        
+        const result = await pool.query(query, [userId]);
+        
+        // Le sortăm în JS ca să fim siguri că cele mai recente sunt primele
+        const sorted = result.rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        res.json(sorted);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+    }
+});
+// Trimite mesaj
+app.post('/api/messages', async (req, res) => {
+    const { senderId, receiverId, text } = req.body;
+    try {
+        const newMsg = await pool.query(
+            "INSERT INTO messages (sender_id, receiver_id, message) VALUES ($1, $2, $3) RETURNING *",
+            [senderId, receiverId, text]
+        );
+        res.json(newMsg.rows[0]);
+    } catch (err) { res.status(500).send(err.message); }
 });
 
 app.listen(port, () => {

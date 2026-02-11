@@ -9,10 +9,12 @@
   <div *ngFor="let post of posts" class="feed-card">
     
     <div class="card-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-          <img [src]="getAvatar(post.pescar_avatar)" class="user-avatar">
+      <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" 
+           [routerLink]="['/profile', post.user_id]"> <img [src]="getAvatar(post.pescar_avatar)" class="user-avatar">
           <div class="header-info">
-            <span class="username">{{ post.pescar_nume }}</span>
+            <span class="username" style="font-weight: bold; color: #2980b9;">
+                {{ post.pescar_nume }}
+            </span>
             <span class="date">{{ post.created_at | date:'shortDate' }}</span>
           </div>
       </div>

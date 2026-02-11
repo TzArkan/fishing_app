@@ -13,7 +13,7 @@ export class App {
   title = 'Fishing App';
   showMenu: boolean = true;
   currentUser: any = null;
-
+  showSettingsMenu: boolean = false;
   constructor(
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object // <--- INJECTĂM ID-UL PLATFORMEI
@@ -40,12 +40,16 @@ export class App {
       }
     });
   }
+  toggleSettings() {
+    this.showSettingsMenu = !this.showSettingsMenu;
+  }
 
-  logout() {
-    // Și aici e bine să verificăm, deși logout se face doar din browser de obicei
+ logout() {
+    this.showSettingsMenu = false; // Ascundem meniul
     if (isPlatformBrowser(this.platformId)) {
         localStorage.removeItem('user');
         localStorage.removeItem('userId');
+        localStorage.removeItem('token');
     }
     this.currentUser = null;
     this.router.navigate(['/login']);

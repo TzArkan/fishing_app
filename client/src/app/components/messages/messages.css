@@ -1,0 +1,151 @@
+/* Fundal fix (același ca la restul) */
+.full-screen-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: -1;
+    background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+    background-size: cover;
+}
+
+.messenger-container {
+    max-width: 1100px;
+    height: 85vh; /* Aproape tot ecranul */
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 12px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+/* SIDEBAR (30%) */
+.sidebar {
+    width: 320px;
+    background: #f8f9fa;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 20px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+.sidebar-header h3 { margin: 0 0 15px 0; color: #2c3e50; }
+
+.search-box input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+    background: #f1f2f6;
+}
+
+.conv-list, .search-results {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conv-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.conv-item:hover { background: #e9ecef; }
+.conv-item.active { background: #dbeafe; border-left: 4px solid #3498db; }
+
+.conv-avatar {
+    width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px;
+}
+
+.conv-info p {
+    margin: 0; color: #7f8c8d; font-size: 0.85rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
+
+/* CHAT AREA (70%) */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.chat-header-top {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    background: #fff;
+}
+
+.header-avatar {
+    width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;
+}
+
+.messages-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #fdfdfd;
+    display: flex;
+    flex-direction: column; /* Mesajele unul sub altul */
+    gap: 8px; /* Spațiu între mesaje */
+}
+
+/* 1. MESAJUL PRIMIT (Standard - Stânga, Gri) */
+.message-bubble {
+    max-width: 70%;
+    padding: 10px 16px;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    position: relative;
+    word-wrap: break-word;
+    
+    /* STIL SPECIFIC PRIMIT */
+    background: #e4e6eb; /* Gri deschis (stil Messenger) */
+    color: #050505;      /* Text negru */
+    align-self: flex-start; /* Aliniat la STÂNGA */
+    border-bottom-left-radius: 4px; /* Colț mic jos-stânga */
+}
+
+/* 2. MESAJUL MEU (Clasa .me - Dreapta, Albastru) */
+.message-bubble.me {
+    /* STIL SPECIFIC TRIMIS */
+    background: #0084ff; /* Albastru (stil Messenger) */
+    color: #ffffff;      /* Text alb */
+    align-self: flex-end; /* Aliniat la DREAPTA */
+    border-bottom-left-radius: 18px; /* Resetăm colțul stânga */
+    border-bottom-right-radius: 4px; /* Colț mic jos-dreapta */
+}
+
+.input-area {
+    padding: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    background: #fff;
+}
+
+.input-area input {
+    flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none;
+}
+
+.input-area button {
+    width: 45px; height: 45px; border-radius: 50%; background: #3498db; color: white; border: none; font-size: 1.2rem; cursor: pointer;
+}
+
+.empty-chat {
+    flex: 1; display: flex; align-items: center; justify-content: center; color: #999;
+}
+
+.clickable { cursor: pointer; }
+.clickable:hover { text-decoration: underline; color: #3498db; }

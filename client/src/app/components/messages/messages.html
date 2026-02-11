@@ -1,0 +1,61 @@
+<div class="full-screen-bg"></div>
+
+<div class="messenger-container">
+  
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>Mesaje</h3>
+      <div class="search-box">
+        <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="🔍 Caută un utilizator...">
+      </div>
+    </div>
+
+    <div class="search-results" *ngIf="isSearching">
+        <div *ngFor="let res of searchResults" class="conv-item" (click)="selectUser(res)">
+            <img [src]="res.avatar_url ? 'http://localhost:5000/' + res.avatar_url : 'https://ui-avatars.com/api/?name='+res.nume" class="conv-avatar">
+            <span>{{ res.nume }}</span>
+        </div>
+        <div *ngIf="searchResults.length === 0" class="no-res">Niciun rezultat.</div>
+    </div>
+
+    <div class="conv-list" *ngIf="!isSearching">
+      <div *ngFor="let conv of conversations" 
+           class="conv-item" 
+           [class.active]="selectedUser?.id === conv.partner_id"
+           (click)="selectUser(conv)">
+        <img [src]="conv.avatar_url ? 'http://localhost:5000/' + conv.avatar_url : 'https://ui-avatars.com/api/?name='+conv.nume" class="conv-avatar">
+        <div class="conv-info">
+          <strong>{{ conv.nume }}</strong>
+          <p>{{ conv.last_message }}</p>
+        </div>
+      </div>
+      <div *ngIf="conversations.length === 0" class="no-res">Nu ai conversații active.</div>
+    </div>
+  </div>
+
+  <div class="chat-area">
+    
+    <div class="chat-header-top" *ngIf="selectedUser">
+       <img [src]="selectedUser.avatar_url ? 'http://localhost:5000/' + selectedUser.avatar_url : 'https://ui-avatars.com/api/?name='+selectedUser.nume" class="header-avatar">
+       <span [routerLink]="['/profile', selectedUser.id]" class="clickable">{{ selectedUser.nume }}</span>
+    </div>
+
+    <div class="messages-box" #scrollMe *ngIf="selectedUser">
+       <div *ngFor="let msg of currentMessages" 
+            class="message-bubble" 
+            [class.me]="msg.sender_id == myId">
+         {{ msg.message }}
+       </div>
+    </div>
+
+    <div class="empty-chat" *ngIf="!selectedUser">
+        <p>Selectează un utilizator pentru a începe conversația.</p>
+    </div>
+
+    <div class="input-area" *ngIf="selectedUser">
+      <input [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Scrie un mesaj...">
+      <button (click)="sendMessage()">➤</button>
+    </div>
+
+  </div>
+</div>

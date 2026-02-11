@@ -4,7 +4,7 @@ import { LoginComponent } from './components/login/login';
 import { RegisterComponent } from './components/register/register';
 import { HistoryComponent } from './components/history/history';
 import { ProfilComponent } from './components/profil/profil'; 
-import { EditCatch } from './edit-catch/edit-catch';
+import { EditCatch } from './components/edit-catch/edit-catch';
 import { FeedComponent } from './components/feed/feed';
 import { Map } from './components/map/map';
 import { CalendarComponent} from './components/calendar/calendar';
@@ -13,7 +13,9 @@ import { authGuard } from './guards/auth-guard';
 import { EncyclopediaComponent } from './components/encyclopedia/encyclopedia';
 import { LegislationComponent } from './components/legislation/legislation';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard';
-
+import { UserProfileComponent } from './components/user-profile/user-profile';
+import { SocialComponent } from './components/social/social';
+import { MessagesComponent } from './components/messages/messages';
 export const routes: Routes = [
 
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -33,6 +35,7 @@ export const routes: Routes = [
     canActivate: [authGuard] 
   },
   { path: 'admin', component: AdminDashboardComponent },
+  { path: 'messages', component: MessagesComponent },
   { 
     path: 'adauga', 
     component: AddCatchComponent, 
@@ -43,6 +46,7 @@ export const routes: Routes = [
     component: EditCatch, 
     canActivate: [authGuard] 
   },
+  { path: 'profile/:id', component: UserProfileComponent },
   { 
     path: 'profil', 
     component: ProfilComponent, 
@@ -54,6 +58,7 @@ export const routes: Routes = [
     canActivate: [authGuard] 
   },
   { path: 'enciclopedie', component: EncyclopediaComponent, canActivate: [authGuard] },
+  { path: 'social', component: SocialComponent },
   { 
     path: 'calendar', 
     component: CalendarComponent, 

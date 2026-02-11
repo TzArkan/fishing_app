@@ -1,0 +1,207 @@
+/* --- 1. FUNDAL FIX (MUNTII) --- */
+.full-screen-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: -1; /* Stă în spatele containerului */
+    background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+    background-size: cover;
+}
+
+/* --- Container Principal (Cardul Alb) --- */
+.profile-container {
+    max-width: 900px;
+    margin: 40px auto; /* Spațiu sus/jos */
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    /* O umbră mai puternică pentru a se separa de fundal */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative; /* Ca să stea peste bg */
+}
+
+/* Header Profil */
+.profile-header {
+    display: flex;
+    gap: 30px;
+    align-items: flex-end; /* Aliniem jos pentru a potrivi cu avatarul */
+    /* Pastram ajustarea ta pentru suprapunere */
+    position: relative;
+    margin-top: -80px; 
+    padding-bottom: 10px;
+}
+
+/* Avatar Mare */
+.big-avatar {
+    width: 150px; /* Putin mai mare */
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #ffffff; /* Bordura alba groasa */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background: #fff; /* In caz ca e transparent */
+}
+
+.info-section {
+    flex: 1; /* Ocupa restul spatiului */
+    /* Fundalul semitransparent pe care l-ai avut e ok, dar pe alb merge si fara */
+    padding-top: 50px; /* Spatiu pentru a nu se lovi de cover */
+}
+
+.info-section h1 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-size: 2.2rem;
+}
+
+.bio {
+    color: #7f8c8d;
+    font-style: italic;
+    margin-bottom: 15px;
+}
+
+.stats {
+    font-weight: bold;
+    color: #2980b9;
+    margin-bottom: 20px;
+}
+
+/* Butoane Actiune */
+.actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap; /* In caz ca sunt multe butoane */
+}
+
+button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.1s, background 0.2s;
+    font-size: 0.95rem;
+}
+button:active { transform: scale(0.98); }
+
+.btn-add { background: #3498db; color: white; }
+.btn-pending { background: #95a5a6; color: white; cursor: not-allowed; }
+.btn-accept { background: #2ecc71; color: white; }
+.btn-chat { background: #e67e22; color: white; }
+
+.btn-unfriend {
+    background: #e74c3c;
+    color: white;
+}
+.btn-unfriend:hover { background: #c0392b; }
+
+.friend-badge {
+    color: #27ae60;
+    font-weight: bold;
+    background: #eafaf1;
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+/* --- Cover Photo (Bannerul din interiorul cardului) --- */
+.profile-cover {
+    height: 250px; /* Mai inalt */
+    width: calc(100% + 60px); 
+    margin: -30px -30px 20px -30px; 
+    overflow: hidden;
+    border-radius: 12px 12px 0 0; /* Rotunjit doar sus */
+}
+
+.profile-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Galerie */
+.grid-capturi {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Puțin mai late */
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.grid-item {
+    position: relative;
+    aspect-ratio: 1/1; /* Patrat perfect */
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #eee;
+}
+
+.image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-wrapper img {
+    width: 100%;
+    height: 100%;
+    /* SCHIMBAREA MAJORĂ: contain în loc de cover */
+    object-fit: contain; 
+    transition: transform 0.3s;
+}
+
+.grid-item:hover .image-wrapper img {
+    transform: scale(1.02);
+}
+
+.overlay {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Gradient negru pentru a face textul lizibil indiferent de poză */
+    background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0)); 
+    color: white;
+    padding: 10px 5px 5px 5px; /* Mai mult spațiu sus pt gradient */
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px black;
+}
+
+.no-data {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-style: italic;
+}
+
+/* CHAT WINDOW (Stiluri existente) */
+.chat-window {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    height: 450px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+/* ... restul stilurilor de chat ... */
+.chat-header { background: #3498db; color: white; padding: 12px; display: flex; justify-content: space-between; font-weight: bold; }
+.chat-header button { background: none; padding: 0; color: white; font-size: 1.2rem; }
+.chat-body { flex: 1; background: #f4f6f8; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.message-bubble { max-width: 80%; padding: 8px 12px; border-radius: 15px; font-size: 0.9rem; line-height: 1.4; background: #e2e6ea; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
+.message-bubble.me { background: #3498db; color: white; align-self: flex-end; border-bottom-left-radius: 15px; border-bottom-right-radius: 2px; }
+.chat-footer { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; background: #fff; }
+.chat-footer input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+.chat-footer button { width: 35px; height: 35px; border-radius: 50%; background: #3498db; color: white; padding: 0; }

@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FishingService } from '../services/fishing';
+import { FishingService } from '../../services/fishing';
 
 @Component({
   selector: 'app-edit-catch',

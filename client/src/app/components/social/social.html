@@ -1,0 +1,109 @@
+<div class="full-screen-bg"></div>
+
+<div class="social-container">
+<div class="social-search-card">
+    <div class="input-group">
+        <span class="search-icon">🔍</span>
+        <input type="text" 
+               [(ngModel)]="searchQuery" 
+               (input)="onSearch()" 
+               placeholder="Caută un pescar pentru a-l adăuga...">
+    </div>
+
+    <div class="search-dropdown" *ngIf="searchResults.length > 0">
+        <div *ngFor="let user of searchResults" class="search-item">
+            <div class="search-user-info" [routerLink]="['/profile', user.id]">
+                <img [src]="user.avatar_url ? 'http://localhost:5000/' + user.avatar_url : 'https://ui-avatars.com/api/?name='+user.nume">
+                <span>{{ user.nume }}</span>
+            </div>
+            
+            <div class="search-actions">
+                <button (click)="sendFriendRequest(user.id)" class="btn-mini-add">➕ Adaugă</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="search-dropdown" *ngIf="searchQuery.length > 2 && searchResults.length === 0">
+        <div class="search-item no-result">Nu am găsit utilizatori cu acest nume.</div>
+    </div>
+</div>
+  <section class="section-requests" *ngIf="incomingRequests.length > 0">
+    <div class="section-header">
+        <h3> Cereri Primite <span class="badge">{{ incomingRequests.length }}</span></h3>
+    </div>
+    <div *ngFor="let req of incomingRequests" class="request-card">
+      <div class="req-info">
+        <img [src]="req.avatar_url ? 'http://localhost:5000/' + req.avatar_url : 'https://ui-avatars.com/api/?name='+req.nume" 
+             class="req-avatar clickable"
+             [routerLink]="['/profile', req.user_id]"> <div class="req-text">
+            <strong [routerLink]="['/profile', req.user_id]" class="clickable">{{ req.nume }}</strong>
+            <span>vrea să fie prietenul tău</span>
+        </div>
+      </div>
+      <div class="req-actions">
+        <button (click)="handleRequest(req.friendship_id, 'accepted')" class="btn-confirm">Acceptă</button>
+        <button (click)="handleRequest(req.friendship_id, 'declined')" class="btn-delete">Refuză</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sent" *ngIf="sentRequests.length > 0">
+    <div class="section-header">
+        <h3> Cereri Trimise (În așteptare)</h3>
+    </div>
+    <div class="sent-list">
+        <div *ngFor="let sent of sentRequests" class="sent-card">
+            <div class="sent-info">
+                <img [src]="sent.avatar_url ? 'http://localhost:5000/' + sent.avatar_url : 'https://ui-avatars.com/api/?name='+sent.nume" 
+                     class="small-avatar clickable"
+                     [routerLink]="['/profile', sent.user_id]">
+                
+                <div class="sent-text">
+                    <span>Către: </span>
+                    <strong [routerLink]="['/profile', sent.user_id]" class="clickable">{{ sent.nume }}</strong>
+                </div>
+            </div>
+            <button (click)="cancelRequest(sent.friendship_id)" class="btn-cancel">Anulează Cererea</button>
+        </div>
+    </div>
+  </section>
+
+  <section class="section-friends" *ngIf="friendsList.length > 0">
+    <div class="section-header">
+        <h3> Prietenii Mei ({{ friendsList.length }})</h3>
+    </div>
+    <div class="friends-grid">
+        <div *ngFor="let fr of friendsList" class="friend-card">
+            <img [src]="fr.avatar_url ? 'http://localhost:5000/' + fr.avatar_url : 'https://ui-avatars.com/api/?name='+fr.nume" 
+                 class="friend-avatar clickable" 
+                 [routerLink]="['/profile', fr.id]">
+            
+            <strong [routerLink]="['/profile', fr.id]" class="clickable">{{ fr.nume }}</strong>
+            
+            <button class="btn-msg" [routerLink]="['/profile', fr.id]">Vezi Profil</button>
+        </div>
+    </div>
+  </section>
+
+  <section class="section-suggestions">
+    <div class="section-header">
+        <h3> Pescari noi</h3>
+    </div>
+    <div class="suggestions-grid">
+      <div *ngFor="let s of suggestions" class="sug-card">
+        <div class="sug-avatar-wrapper">
+             <img [src]="s.avatar_url ? 'http://localhost:5000/' + s.avatar_url : 'https://ui-avatars.com/api/?name='+s.nume" 
+                  class="sug-avatar clickable" 
+                  [routerLink]="['/profile', s.id]">
+        </div>
+        
+        <div class="sug-content">
+            <strong [routerLink]="['/profile', s.id]" class="clickable">{{ s.nume }}</strong>
+        </div>
+        
+        <button (click)="sendFriendRequest(s.id)" class="btn-add-sug"> Adaugă</button>
+      </div>
+    </div>
+  </section>
+
+</div>
