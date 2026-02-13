@@ -26,81 +26,77 @@ app.use(express.json());
 const WEATHER_API_KEY = '4e601c4c3d6087a80b417fac765f2aaa'; 
 
 // Funcție ajutătoare: Calculează scorul bazat pe presiune
+// Funcție nouă bazată pe Formula Multiplicativă din PDF
 function calculateScore(weather, date, lat, long) {
-    // --- 1. LUNĂ & SOLUNAR (30% din total) ---
-    // Soarele și Luna sunt factori critici. "Tranzitul" este echivalentul "Major Time" din aplicații.
     const moonIllum = SunCalc.getMoonIllumination(date);
     const moonTimes = SunCalc.getMoonTimes(date, lat, long);
-    
-    // A. Faza Lunii (Baza)
-    const distFromFull = Math.abs(0.5 - moonIllum.phase);
-    let moonScore = 50; // Pornim de la mediu
-    
-    if (distFromFull < 0.1) moonScore = 95;      // Lună Plină (Foarte Activ)
-    else if (moonIllum.phase < 0.1 || moonIllum.phase > 0.9) moonScore = 100; // Lună Nouă (Excelent - întuneric total)
-    else if (distFromFull < 0.25) moonScore = 70; // Primul/Ultimul Pătrar
-    else moonScore = 40; // Alte faze intermediare
-
-    // B. Momente Solunare (Bonusuri)
+    const sunTimes = SunCalc.getTimes(date, lat, long);
     const currentHour = date.getHours();
-    
-    // Perioade MINORE (Răsărit / Apus) - Durată aprox 1h
-    // Verificăm fereastra de +/- 1 oră
-    if (moonTimes.rise && Math.abs(moonTimes.rise.getHours() - currentHour) <= 1) moonScore += 15;
-    if (moonTimes.set && Math.abs(moonTimes.set.getHours() - currentHour) <= 1) moonScore += 15;
 
-    // Perioade MAJORE (Tranzit - Luna sus) - Durată aprox 2h - CEL MAI IMPORTANT
-    // Fishing Points pune mare preț pe asta. 'transit' e momentul când luna e cel mai sus (Zenit).
+    // --- A. ASTRONOMIC (Baza) ---
+    // 1. Valoarea Solunară (V_sol) -> Major=1.0, Minor=0.5, Bază=0.1
+    let v_sol = 0.1;
+    
+    // Verificăm Tranzitul (Major) - Fereastră +/- 1.5 ore
     if (moonTimes.transit) {
-        const transitHour = moonTimes.transit.getHours();
-        // Fereastră mai largă (+/- 2 ore) pentru momentul major
-        if (Math.abs(transitHour - currentHour) <= 2) {
-            moonScore += 25; // Bonus Masiv
+        const transitH = moonTimes.transit.getHours();
+        if (Math.abs(transitH - currentHour) <= 1.5) v_sol = 1.0;
+    }
+    
+    // Verificăm Răsărit/Apus Lună (Minor) - Fereastră +/- 1 oră (dacă nu e deja Major)
+    if (v_sol === 0.1) {
+        if ((moonTimes.rise && Math.abs(moonTimes.rise.getHours() - currentHour) <= 1) ||
+            (moonTimes.set && Math.abs(moonTimes.set.getHours() - currentHour) <= 1)) {
+            v_sol = 0.5;
         }
     }
 
-    // Limităm scorul lunii la 100 (ca să nu iasă din grafic)
-    moonScore = Math.min(moonScore, 100);
+    // 2. Coeficientul Lunii (C_luna) -> Nouă/Plină=1.0, Pătrar=0.6, Restul=0.8
+    let c_luna = 0.8;
+    const phase = moonIllum.phase; 
+    const distFromFull = Math.abs(0.5 - phase);
 
+    if (phase < 0.1 || phase > 0.9) c_luna = 1.0; // Lună Nouă (Cea mai bună)
+    else if (distFromFull < 0.1) c_luna = 1.0;    // Lună Plină
+    else if (distFromFull < 0.25 && distFromFull > 0.20) c_luna = 0.6; // Pătrar
+    
+    // 3. Bonus Solar (B_solar)
+    let b_solar = 0.0;
+    const sunriseH = sunTimes.sunrise.getHours();
+    const sunsetH = sunTimes.sunset.getHours();
 
-    // --- 2. PRESIUNE ATMOSFERICĂ (35% din total) ---
-    // Ideal: 1012-1018 hPa (Stabilă sau în ușoară scădere).
+    // Zori/Amurg (+0.4) doar dacă se suprapune cu activitate solunară
+    if (Math.abs(currentHour - sunriseH) <= 1 || Math.abs(currentHour - sunsetH) <= 1) {
+        if (v_sol > 0.1) b_solar = 0.4;
+    } else if (currentHour >= 11 && currentHour <= 14) {
+        b_solar = 0.1; // Miezul zilei
+    }
+
+    let baseAstronomical = v_sol + c_luna + b_solar;
+
+    // --- B. MODULATOR BAROMETRIC (M_baro) ---
+    // Scădere lentă (1002-1014)=1.2 | Stabil=1.0 | Creștere rapidă(>1022)=0.5
     const p = weather.main.pressure;
-    let pressureScore = 50;
+    let m_baro = 1.0; 
 
-    if (p >= 1012 && p <= 1018) pressureScore = 100; // Perfect
-    else if (p >= 1005 && p < 1012) pressureScore = 85; // Acceptabil (presiune joasă, adesea înainte de furtună - peștele mănâncă)
-    else if (p > 1018 && p <= 1025) pressureScore = 70; // Presiune mare (front rece, cer senin, dar peștele poate fi apatic)
-    else pressureScore = 30; // Extreme (furtună mare sau presiune uriașă)
+    if (p >= 1002 && p <= 1014) m_baro = 1.2; // Ideal (scădere ușoară)
+    else if (p > 1014 && p <= 1022) m_baro = 1.0; // Stabil
+    else if (p > 1022) m_baro = 0.5; // Presiune mare/creștere (Slab)
+    else if (p < 1000) m_baro = 0.8; // Furtună (Mediocru)
 
-
-    // --- 3. TEMPERATURĂ (20% din total) ---
-    // Ideal general: 12-25°C. 
-    // Notă: Aici ideal ar fi temperatura APEI, dar folosim aerul ca aproximare.
+    // --- C. FILTRE DE SIGURANȚĂ (Temperatura & Vânt) ---
+    let safetyMultiplier = 1.0;
+    
     const t = weather.main.temp;
-    let tempScore = 50;
-    
-    if (t >= 15 && t <= 24) tempScore = 100;
-    else if (t >= 10 && t < 15) tempScore = 80; // Puțin rece, dar ok pt răpitor
-    else if (t > 24 && t <= 30) tempScore = 70; // Prea cald, peștele stă la fund
-    else if (t < 5 || t > 32) tempScore = 20;   // Extreme
+    if (t < 4) safetyMultiplier *= 0.3; // Iarnă grea (Metabolism 0)
+    else if (t > 32) safetyMultiplier *= 0.6; // Caniculă
 
+    const windKmh = weather.wind.speed * 3.6;
+    if (windKmh > 25) safetyMultiplier *= 0.2; // Furtună/Vânt tare (Strică tot)
+    else if (windKmh > 15) safetyMultiplier *= 0.8;
 
-    // --- 4. VÂNT (15% din total) ---
-    // Ideal: Briză ușoară (vântul oxigenează apa). Vântul 0 e uneori rău (apă stătută).
-    const w = weather.wind.speed * 3.6; // m/s -> km/h
-    let windScore = 50;
-
-    if (w > 2 && w <= 12) windScore = 100; // Briză perfectă (valuri mici)
-    else if (w >= 0 && w <= 2) windScore = 80; // Calm total (ok, dar uneori peștele e precaut)
-    else if (w > 12 && w <= 25) windScore = 60; // Vânt măricel (pescuit dificil)
-    else windScore = 20; // Furtună/Vânt puternic
-
-
-    // --- CALCUL FINAL PONDERAT ---
-    let final = (pressureScore * 0.35) + (moonScore * 0.30) + (tempScore * 0.20) + (windScore * 0.15);
-    
-    return Math.min(Math.round(final), 100);
+    // Calculăm scorul intermediar (fără apă)
+    return baseAstronomical * m_baro * safetyMultiplier;
 }
 
 const AFDJ_STATIONS = [
@@ -236,13 +232,13 @@ app.post('/api/forecast', async (req, res) => {
         const response = await axios.get(url);
         const list = response.data.list;
 
-        // --- SCRAPING AFDJ AVANSAT (Prognoza 5 Zile) ---
+        // --- SCRAPING AFDJ AVANSAT ---
         let stationName = targetStation.name;
-        let currentLevel = 0; // Nivelul de azi
-        let currentVar = 0;   // Variația de azi
-        let forecastLevels = []; // Aici vom pune [Val24H, Val48H, Val72H, Val96H, Val120H]
+        let currentLevel = 0; 
+        let currentVar = 0;   
+        let forecastLevels = []; 
         let dataAvailable = false;
-
+        
         try {
             const headers = { 'User-Agent': 'Mozilla/5.0' };
             const afdjRes = await axios.get('https://www.afdj.ro/ro/cotele-dunarii', { headers, timeout: 4000 });
@@ -250,39 +246,25 @@ app.post('/api/forecast', async (req, res) => {
             
             $('tbody tr').each((i, row) => {
                 const text = $(row).text().trim();
-                
-                // Căutăm stația noastră
                 if (text.toLowerCase().includes(targetStation.name.toLowerCase())) {
                     dataAvailable = true;
                     const tds = $(row).find('td');
-
-                    // 1. Extragem Nivelul Curent (Coloana 2 - index 2)
                     currentLevel = parseInt($(tds[2]).text().trim());
-
-                    // 2. Extragem Variația Curentă (Coloana 3 - index 3)
-                    // Curățăm textul gen "+ 6" sau "6"
                     const varText = $(tds[3]).text().trim().match(/([+-]?\s?\d+)/);
                     if (varText) currentVar = parseInt(varText[0].replace(/\s/g, ''));
-
-                    // 3. Extragem Prognozele (Coloanele 6, 7, 8, 9, 10 corespund la 24H...120H)
-                    // Verifică imaginea ta: 24H este a 7-a coloană vizuală (index 6 în array 0-indexed)
-                    // Indexii sunt: 6(24H), 7(48H), 8(72H), 9(96H), 10(120H)
                     for (let j = 6; j <= 10; j++) {
                         const val = parseInt($(tds[j]).text().trim());
-                        forecastLevels.push(isNaN(val) ? currentLevel : val); // Fallback la current dacă e gol
+                        forecastLevels.push(isNaN(val) ? currentLevel : val);
                     }
-                    
-                    return false; // Stop loop
+                    return false; 
                 }
             });
         } catch (e) {
             console.log("Eroare AFDJ:", e.message);
         }
 
-        // --- GRUPARE DATE ---
+        // --- PROCESARE DATE ---
         const daysMap = {};
-        
-        // Un contor ca să știm a câta zi unică procesăm (0=Azi, 1=Maine...)
         let dayIndexCounter = -1; 
         let lastProcessedDate = "";
 
@@ -292,51 +274,50 @@ app.post('/api/forecast', async (req, res) => {
             const hour = dateObj.getHours() + ":00";
             const moonIllum = SunCalc.getMoonIllumination(dateObj);
             
-            // Verificăm dacă am trecut la o zi nouă pentru a incrementa indexul
             if (dateKey !== lastProcessedDate) {
                 dayIndexCounter++;
                 lastProcessedDate = dateKey;
             }
 
-            // --- CALCUL VARIAȚIE APĂ PENTRU ZIUA ASTA ---
+            // --- 1. Determină Variația Apei (H_local Logic) ---
             let dailyWaterVar = 0;
             let dailyWaterLevel = 0;
-            let waterScore = 50; // Default
+            let h_local = 1.0; // Default factor neutru
 
             if (dataAvailable) {
                 if (dayIndexCounter === 0) {
-                    // AZI: Folosim datele curente
                     dailyWaterLevel = currentLevel;
                     dailyWaterVar = currentVar;
                 } else if (dayIndexCounter > 0 && dayIndexCounter <= 5) {
-                    // ZILELE URMATOARE (1..5):
-                    // Nivelul prognozat pentru ziua curentă (index - 1 pt că array-ul începe de la 24H)
                     const predictedLevel = forecastLevels[dayIndexCounter - 1]; 
-                    
-                    // Nivelul zilei anterioare (ca să calculăm variația)
                     const previousLevel = dayIndexCounter === 1 ? currentLevel : forecastLevels[dayIndexCounter - 2];
-                    
                     dailyWaterLevel = predictedLevel;
-                    dailyWaterVar = predictedLevel - previousLevel; // Variația față de ieri
+                    dailyWaterVar = predictedLevel - previousLevel;
                 }
                 
-                // Calcul Scored Apă
-                if (dailyWaterVar > 0 && dailyWaterVar <= 10) waterScore = 100; // Creștere ușoară
-                else if (dailyWaterVar === 0) waterScore = 80; // Staționar
-                else if (dailyWaterVar > 10) waterScore = 60; // Creștere mare
-                else if (dailyWaterVar < 0 && dailyWaterVar >= -5) waterScore = 70; // Scădere mică
-                else waterScore = 40; // Scădere mare
+                // Aplicăm multiplicatorii din PDF pentru apă
+                if (dailyWaterVar > 0) h_local = 1.1;       // Creștere (Bonus)
+                else if (dailyWaterVar === 0) h_local = 1.0; // Stabil
+                else if (dailyWaterVar < 0) h_local = 0.7;   // Scădere (Penalizare mare)
             }
 
-            // Calculăm scorul Meteo
-            let baseScore = calculateScore(item, dateObj, latitude, longitude);
+            // --- 2. Calculăm Scorul Brut (Astro * Meteo) ---
+            let rawScore = calculateScore(item, dateObj, latitude, longitude);
             
-            // Scor Final (85% Meteo + 15% Apa)
-            let finalHourlyScore = baseScore;
-            if (dataAvailable) {
-                finalHourlyScore = Math.round((baseScore * 0.85) + (waterScore * 0.15));
-            }
+            // --- 3. Aplicăm Factorul Apă (Formula Finală) ---
+            // IA = RawScore * H_local
+            let final_IA = rawScore * h_local;
 
+            // --- 4. Conversie în Procent (0-100) pentru UI ---
+            // Un scor IA de 2.5 este considerat teoretic maximul perfect.
+            let percentageScore = (final_IA / 2.5) * 100;
+            
+            // Plafonare la 100% și rotunjire
+            if (percentageScore > 100) percentageScore = 100;
+            let finalHourlyScore = Math.round(percentageScore);
+
+
+            // --- SALVARE ÎN OBIECT ---
             if (!daysMap[dateKey]) {
                 daysMap[dateKey] = {
                     date: dateKey,
@@ -347,7 +328,6 @@ app.post('/api/forecast', async (req, res) => {
                     rawPressure: 0,
                     rawWind: 0,
                     moonPhaseVal: moonIllum.phase,
-                    // Salvăm datele despre apă specifice acestei zile
                     waterInfo: {
                         station: stationName,
                         level: dailyWaterLevel,
@@ -385,9 +365,8 @@ app.post('/api/forecast', async (req, res) => {
             return {
                 ...day,
                 averageScore: avgScore,
-                verdict: avgScore > 75 ? "Excelent" : (avgScore > 50 ? "Bun" : "Slab"),
+                verdict: avgScore > 80 ? "Excelent" : (avgScore > 60 ? "Bun" : "Slab"),
                 details: {
-                    // Structurăm datele frumos pentru frontend
                     waterLevel: day.waterInfo.level,
                     waterVariation: day.waterInfo.variation,
                     stationName: day.waterInfo.station,
