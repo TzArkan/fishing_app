@@ -4,10 +4,6 @@ import { FishingService } from '../../services/fishing';
 import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
-import { provideCharts, withDefaultRegisterables } from 'ng2-charts'; // Import nou
-
-// Important: În main.ts sau app.config.ts trebuie adăugat provideCharts(withDefaultRegisterables())
-// Dar putem face importul direct aici pentru Chart.js
 import Chart from 'chart.js/auto';
 
 @Component({
@@ -58,7 +54,6 @@ export class CalendarComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Încercăm să luăm locația curentă la start
     this.getCurrentLocation();
   }
 
@@ -70,7 +65,7 @@ export class CalendarComponent implements OnInit {
         this.fetchForecast();
       });
     } else {
-        this.fetchForecast(); // Folosim default
+        this.fetchForecast();
     }
   }
 
@@ -78,16 +73,15 @@ export class CalendarComponent implements OnInit {
     this.loading = true;
     this.service.getForecast(this.selectedLat, this.selectedLng).subscribe(data => {
       this.forecastDays = data;
-      this.selectDay(data[0]); // Selectăm prima zi default
+      this.selectDay(data[0]);
       this.loading = false;
-      this.showMapModal = false; // Închidem harta dacă era deschisă
+      this.closeMapModal(); // Folosim funcția de închidere care curăță harta
     });
   }
 
   selectDay(day: any) {
     this.selectedDay = day;
     
-    // Actualizăm Graficul
     const labels = day.hourlyData.map((h: any) => h.time);
     const scores = day.hourlyData.map((h: any) => h.score);
 
@@ -105,42 +99,69 @@ export class CalendarComponent implements OnInit {
     };
   }
 
-  // --- LOGICA HĂRȚII DE SELECȚIE ---
+  // --- LOGICA HĂRȚII MODIFICATĂ ---
   async openMapPicker() {
     this.showMapModal = true;
-    if (isPlatformBrowser(this.platformId) && !this.L) {
-        this.L = await import('leaflet');
-        setTimeout(() => this.initMap(), 100); // Mic delay ca să se randeze div-ul
+    if (isPlatformBrowser(this.platformId)) {
+        if (!this.L) {
+            this.L = await import('leaflet');
+        }
+        // Apelează initMap care acum are propriul setTimeout intern
+        this.initMap();
     }
   }
 
   initMap() {
-    if(this.map) {
-        this.map.remove(); // Curățăm harta veche dacă există
+    // 1. Curățăm harta veche dacă există
+    if (this.map) {
+        this.map.remove();
+        this.map = null;
     }
-    
-    this.map = this.L.map('picker-map', {
-        center: [this.selectedLat, this.selectedLng],
-        zoom: 7
-    });
 
-    this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-    
-    // Punem marker pe poziția curentă
-    this.marker = this.L.marker([this.selectedLat, this.selectedLng], {draggable: true}).addTo(this.map);
+    // 2. Folosim setTimeout pentru a aștepta randarea DOM-ului
+    setTimeout(() => {
+        const mapElement = document.getElementById('picker-map');
+        if (!mapElement) return;
 
-    // Când userul dă click pe hartă, mutăm markerul
-    this.map.on('click', (e: any) => {
-        this.marker.setLatLng(e.latlng);
-        this.selectedLat = e.latlng.lat;
-        this.selectedLng = e.latlng.lng;
-    });
+        // 3. Creăm harta
+        this.map = this.L.map('picker-map', {
+            center: [this.selectedLat, this.selectedLng],
+            zoom: 7
+        });
 
-    // Când userul trage markerul
-    this.marker.on('dragend', (e: any) => {
-        const pos = this.marker.getLatLng();
-        this.selectedLat = pos.lat;
-        this.selectedLng = pos.lng;
-    });
+        this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+        
+        this.marker = this.L.marker([this.selectedLat, this.selectedLng], {draggable: true}).addTo(this.map);
+
+        this.map.on('click', (e: any) => {
+            this.marker.setLatLng(e.latlng);
+            this.selectedLat = e.latlng.lat;
+            this.selectedLng = e.latlng.lng;
+        });
+
+        this.marker.on('dragend', (e: any) => {
+            const pos = this.marker.getLatLng();
+            this.selectedLat = pos.lat;
+            this.selectedLng = pos.lng;
+        });
+
+        // 4. Invalidate Size (cheia problemei)
+        this.map.invalidateSize();
+    }, 100);
+  }
+
+  // Funcție nouă pentru închidere curată (opțional, dar recomandat să o folosești în HTML)
+  closeMapModal() {
+      this.showMapModal = false;
+      if (this.map) {
+          this.map.remove();
+          this.map = null;
+      }
+  }
+
+  // Funcție de confirmare (dacă ai buton de confirmare în HTML)
+  confirmLocation() {
+      this.fetchForecast(); // Reîncarcă datele cu noua locație
+      this.closeMapModal();
   }
 }

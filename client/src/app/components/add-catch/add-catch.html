@@ -1,47 +1,76 @@
-<div class="page-wrapper"><div class="glass-card">
-<div class="add-catch-container">
-  <h2>Adaugă o Captură Nouă</h2>
+<div class="page-wrapper">
+  <div class="glass-card">
+    <div class="add-catch-container">
+      <h2>Adaugă o Captură Nouă</h2>
 
-  <div class="form-group">
-    <label>Specie:</label>
-    <select [(ngModel)]="specie" class="form-control custom-select">
-      <option value="" disabled selected>-- Alege Specia --</option>
-      <option *ngFor="let peste of speciiLista" [value]="peste">
-        {{ peste }}
-      </option>
-    </select>
-  </div>
+      <div class="form-group">
+        <label>Locație & Zonă Detectată:</label>
+        <div class="location-row">
+            <span class="zona-badge" [ngClass]="zonaDetectata">
+                {{ zonaNumeAfisat }}
+            </span>
+            
+            <button type="button" (click)="openMapPicker()" class="btn-map">
+                📍 Alege pe Hartă
+            </button>
+        </div>
+        <small style="color: #666; font-size: 0.85rem; margin-top: 5px; display: block;">
+            *Zona se actualizează automat în funcție de pin-ul de pe hartă.
+        </small>
+      </div>
 
-  <div class="form-group">
-    <label>Lungime (cm):</label>
-    <input 
-      type="number" 
-      [(ngModel)]="lungime" 
-      placeholder="ex: 55" 
-      min="0" 
-      oninput="validity.valid||(value='');"
-      class="form-control">
-  </div>
+      <div class="form-group">
+        <label>Specie:</label>
+        <select [(ngModel)]="specie" class="form-control custom-select">
+          <option value="" disabled selected>-- Alege Specia --</option>
+          <option *ngFor="let peste of speciiLista" [value]="peste">
+            {{ peste }}
+          </option>
+        </select>
+      </div>
 
-  <div class="form-group">
-    <label>Detalii:</label>
-    <textarea [(ngModel)]="detalii" placeholder="Momeală, vreme, locație, etc." class="form-control"></textarea>
-  </div>
+      <div class="form-group">
+        <label>Lungime (cm):</label>
+        <input 
+        type="number" 
+        [(ngModel)]="lungime" 
+        placeholder="0 cm" 
+        min="0" 
+        oninput="this.value = !!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null"
+        class="form-control">
+      </div>
 
-  <div class="form-group">
-    <label>Data Capturii:</label>
-    <input 
-      type="date" 
-      [(ngModel)]="dataCapturii" 
-      class="form-control"
-      style="cursor: pointer;">
-  </div>
-  
-  <div class="form-group">
-    <label>Alege o fotografie:</label>
-    <input type="file" (change)="onFileSelected($event)" class="form-control-file">
-  </div>
+      <div class="form-group">
+        <label>Detalii:</label>
+        <textarea [(ngModel)]="detalii" placeholder="Momeală, vreme, locație, etc." class="form-control"></textarea>
+      </div>
 
-  <button (click)="onSubmit()" class="btn-save">Salvează Captura</button>
+      <div class="form-group">
+        <label>Data Capturii:</label>
+        <input 
+          type="date" 
+          [(ngModel)]="dataCapturii" 
+          class="form-control"
+          style="cursor: pointer;">
+      </div>
+      
+      <div class="form-group">
+        <label>Alege o fotografie:</label>
+        <input type="file" (change)="onFileSelected($event)" class="form-control-file">
+      </div>
+
+      <button (click)="onSubmit()" class="btn-save">Salvează Captura</button>
+    </div>
+  </div>
 </div>
-</div></div>
+
+<div class="modal-overlay" *ngIf="showMapModal">
+    <div class="modal-content glass-modal">
+        <h3>Alege Locația Exactă</h3>
+        <div id="catch-map" class="map-container"></div>
+        <div class="modal-actions">
+            <button (click)="closeMapModal()" class="btn-cancel">Anulează</button>
+            <button (click)="confirmLocation()" class="btn-confirm">Confirmă Locația</button>
+        </div>
+    </div>
+</div>

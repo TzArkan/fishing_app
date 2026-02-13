@@ -1,7 +1,7 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FishingService } from '../../services/fishing'; // <--- 1. IMPORTĂ SERVICIUL
+import { FishingService } from '../../services/fishing';
 
 @Component({
   selector: 'app-legislation',
@@ -20,7 +20,6 @@ export class LegislationComponent {
   private map: any = null;
   private marker: any = null;
   
-  // Coordonate implicite (Centrul României)
   selectedLat: number = 45.9432;
   selectedLng: number = 24.9668;
 
@@ -31,33 +30,74 @@ export class LegislationComponent {
     locationCoords: '',
     locationText: '',
     description: '',
-    date: new Date().toISOString().split('T')[0], // Default azi
+    date: new Date().toISOString().split('T')[0],
   };
 
   selectedFile: File | null = null;
   
-  // Datele despre legi
+  // Array-ul laws corectat și formatat
   laws = [
-    { title: 'Perioade de Prohibiție 2025', icon: '📅', content: ['9 Apr - 7 Iun (Generală)', 'Știucă: 1 Feb - 20 Mar', 'Șalău: 20 Mar - 7 Iun'], warning: 'Amendă 600-1000 lei.' },
-    { title: 'Dimensiuni Minime', icon: '📏', content: ['Crap: 40 cm', 'Caras: 20 cm', 'Șalău: 40 cm', 'Somn: 50 cm'], warning: 'Confiscare permis.' },
-    { title: 'Infracțiuni', icon: '⚖️', content: ['Pescuit electric', 'Plase monofilament', 'Comercializare sturioni'], warning: 'Dosar penal.' }
+    {
+      title: 'Perioade de Prohibiție 2026',
+      icon: '📅',
+      content: [
+        'Generală: 9 Apr - 7 Iun (60 zile)',
+        'Frontieră Dunăre: 24 Apr - 7 Iun',
+        'Știucă: 1 Feb - 20 Mar',
+        'Șalău & Biban: 20 Mar - 7 Iun',
+        'Păstrăv (toate speciile): 1 Oct - 31 Mar'
+      ],
+      warning: 'Amendă 600 - 1.000 lei + suspendare permis.'
+    },
+    {
+      title: 'Dimensiuni Minime (Ape Dulci)',
+      icon: '📏',
+      content: [
+        'Crap: 35 cm | Somn: 50 cm',
+        'Șalău: 40 cm | Știucă: 40 cm',
+        'Caras: 20 cm | Biban: 12 cm',
+        'Clean: 25 cm | Mreană: 27 cm',
+        'Avat: 30 cm | Plătică: 25 cm',
+        'Lin: 25 cm | Scobar: 20 cm',
+        'Păstrăv: 20 cm | Lipan: 25 cm',
+        'Babușcă/Roșioară: 15 cm'
+      ],
+      warning: 'Amendă 300 - 600 lei + Reținere permis 90 zile.'
+    },
+    { 
+      title: 'Infracțiuni', 
+      icon: '⚖️', 
+      content: ['Pescuit electric', 'Plase monofilament', 'Comercializare sturioni'], 
+      warning: 'Dosar penal (Închisoare 1-3 ani).' 
+    },
+    {
+      title: 'Reguli de Reținere',
+      icon: '🐟',
+      content: [
+        'Limită zilnică: 5 kg de pește sau o singură bucată (dacă depășește 5kg)',
+        'Pescuit sportiv: Interzisă vânzarea capturii',
+        'Măsurare: De la vârful botului la baza cozii'
+      ],
+      warning: 'Confiscare scule și captură.'
+    }
   ];
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
-    private service: FishingService // <--- 2. INJECTĂM SERVICIUL AICI
+    private service: FishingService
   ) {}
 
   switchTab(tab: 'laws' | 'report') {
     this.activeTab = tab;
   }
 
-  // --- LOGICA HARTA ---
   async openMapPicker() {
     this.showMapModal = true;
     
     if (isPlatformBrowser(this.platformId) && !this.L) {
-        this.L = await import('leaflet');
+        // Importăm Leaflet doar în browser
+        const leaflet = await import('leaflet');
+        this.L = leaflet.default || leaflet; // Asigurăm compatibilitatea modulelor
     }
 
     setTimeout(() => this.initMap(), 100);
@@ -70,6 +110,7 @@ export class LegislationComponent {
         this.map.remove();
     }
     
+    // Asigură-te că ai un div cu id="legislation-map" în HTML
     this.map = this.L.map('legislation-map', {
         center: [this.selectedLat, this.selectedLng],
         zoom: 7
@@ -101,6 +142,8 @@ export class LegislationComponent {
             this.marker.setLatLng([lat, lng]);
             this.selectedLat = lat;
             this.selectedLng = lng;
+        }, (err) => {
+            console.warn("Geolocația nu a putut fi accesată:", err);
         });
     }
   }
@@ -115,19 +158,20 @@ export class LegislationComponent {
     this.showMapModal = false;
   }
 
-  onFileSelected(event: any) { this.selectedFile = event.target.files[0]; }
+  onFileSelected(event: any) { 
+      if (event.target.files && event.target.files.length > 0) {
+          this.selectedFile = event.target.files[0]; 
+      }
+  }
   
-  // --- 3. FUNCȚIA DE TRIMITERE REALĂ ---
-submitReport() {
+  submitReport() {
     if (!this.reportData.description || !this.reportData.locationCoords) { 
         alert('Te rog selectează locația și descrie fapta!'); 
         return; 
     }
 
-    // 1. Creăm obiectul FormData (obligatoriu pentru poze)
     const formData = new FormData();
 
-    // 2. Adăugăm câmpurile text
     if (isPlatformBrowser(this.platformId)) {
         const storedId = localStorage.getItem('userId');
         if (storedId) formData.append('userId', storedId);
@@ -139,15 +183,12 @@ submitReport() {
     formData.append('description', this.reportData.description);
     formData.append('date', this.reportData.date);
 
-    // 3. Adăugăm POZA (dacă există)
     if (this.selectedFile) {
-        // 'poza' trebuie să fie același nume ca în index.js la upload.single('poza')
         formData.append('poza', this.selectedFile); 
     }
 
-    console.log('Se trimite raportul (FormData)...');
+    console.log('Se trimite raportul...');
 
-    // 4. Trimitem la server
     this.service.sendReport(formData).subscribe({
         next: (response) => {
             alert('✅ Sesizare cu FOTO înregistrată! Mulțumim.');
@@ -156,7 +197,7 @@ submitReport() {
             this.reportData.description = '';
             this.reportData.locationText = '';
             this.reportData.locationCoords = '';
-            this.selectedFile = null; // Resetăm fișierul
+            this.selectedFile = null;
             this.activeTab = 'laws';
         },
         error: (error) => {
