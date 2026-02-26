@@ -14,7 +14,7 @@
           type="text" 
           [(ngModel)]="user.nume" 
           class="modern-input" 
-          placeholder="Ex: Ion Pescarul">
+          placeholder="Username">
       </div>
 
       <div class="form-group">
@@ -23,7 +23,7 @@
           type="email" 
           [(ngModel)]="user.email" 
           class="modern-input" 
-          placeholder="email@exemplu.ro">
+          placeholder="email">
       </div>
 
       <div class="form-group">
@@ -32,9 +32,17 @@
           type="password" 
           [(ngModel)]="user.password" 
           class="modern-input" 
-          placeholder="••••••">
+          placeholder="••••••••">
       </div>
 
+      <div class="form-group">
+        <label>Confirmă Parola</label>
+        <input 
+          type="password" 
+          [(ngModel)]="confirmPassword" 
+          class="modern-input" 
+          placeholder="••••••••">
+      </div>
       <button (click)="onSendCode()" [disabled]="isLoading" class="btn-nature">
         {{ isLoading ? 'Se trimite...' : 'Trimite Cod de Verificare' }}
       </button>

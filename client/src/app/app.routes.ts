@@ -16,6 +16,7 @@ import { AdminDashboardComponent } from './components/admin-dashboard/admin-dash
 import { UserProfileComponent } from './components/user-profile/user-profile';
 import { SocialComponent } from './components/social/social';
 import { MessagesComponent } from './components/messages/messages';
+import { IdentificarePesteComponent } from './components/identificare-peste/identificare-peste';
 export const routes: Routes = [
 
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -59,6 +60,7 @@ export const routes: Routes = [
   },
   { path: 'enciclopedie', component: EncyclopediaComponent, canActivate: [authGuard] },
   { path: 'social', component: SocialComponent },
+  { path: 'identificare', component: IdentificarePesteComponent },
   { 
     path: 'calendar', 
     component: CalendarComponent, 

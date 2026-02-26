@@ -1,118 +1,328 @@
-.navbar {
-  background: #2c3e50;
-  padding: 1rem 2rem;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+*, *::before, *::after {
+    box-sizing: border-box; /* Previne elementele să iasă din ecran din cauza padding-ului */
+    margin: 0;
+    padding: 0;
 }
 
-.nav-left a {
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
-  font-weight: bold;
-  margin-right: 20px;
-  transition: opacity 0.2s;
+html, body {
+    width: 100%;
+    overflow-x: hidden; /* Taie orice element care încearcă să lărgească ecranul pe orizontală */
+    font-family: 'Poppins', sans-serif; /* Sau fontul tău preferat */
+    background-color: #f4f7f6; /* O culoare de fundal generală */
 }
 
-.nav-left a:hover {
-  opacity: 0.8;
+/* 2. IMAGINI ȘI VIDEO-URI FLUIDE */
+img, video {
+    max-width: 100%;
+    height: auto; /* Imaginile se vor micșora automat pe ecrane mici, nu vor mai sparge designul */
+    display: block;
 }
 
-.active-link {
-  border-bottom: 2px solid #1abc9c;
-  padding-bottom: 4px;
+/* 3. CLASĂ GLOBALĂ DE CONTAINER */
+/* Folosește clasa asta în fiecare HTML al tău (ex: <div class="page-container">...</div>) */
+.page-container {
+    width: 100%;
+    max-width: 1200px; /* Lățimea maximă pe ecrane mari */
+    margin: 0 auto; /* Centrează conținutul */
+    padding: 20px; /* Lasă spațiu pe margini pe telefoane */
 }
 
-.btn-logout {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
+/* 4. SETĂRI GLOBALE PENTRU BUTOANE ȘI INPUTURI */
+input, button, select, textarea {
+    font-family: inherit;
+    max-width: 100%; /* Să nu iasă din ecran pe telefoane mici */
 }
 
-.btn-logout:hover {
-  background-color: #c0392b;
+.main-navbar {
+    background: #2c3e50; /* Culoarea închisă de fundal */
+    padding: 0.8rem 2rem;
+    display: flex;
+    /* 'space-between' pune hamburgerul în stânga și restul în dreapta */
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Butonul de Setări (Rotund și elegant) */
-.btn-settings {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    font-size: 1.2rem;
-    cursor: pointer;
+/* --- LINK-URILE DIN MENIU (Desktop) --- */
+.nav-links {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    gap: 10px;
+    /* NOU: Asta împinge tot meniul în DREAPTA, lângă setări */
+    margin-left: auto;
+    margin-right: 20px; /* Puțin spațiu față de butonul de setări */
 }
 
-.btn-settings:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: rotate(90deg); /* Efect simpatic de rotire la hover */
+/* STILIZAREA NOILOR BUTOANE (Chenarul frumos) */
+.nav-links a {
+    color: #ecf0f1;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    /* Dimensiuni și spațiere de buton */
+    padding: 10px 16px;
+    border-radius: 8px;
+    /* NOU: Chenar subtil și fundal transparent */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    position: relative; /* Necesar pentru animația liniei de jos */
+    transition: all 0.3s ease;
+    overflow: hidden; /* Ca linia să nu iasă din buton */
 }
 
-/* Containerul Dropdown-ului */
+/* --- ANIMAȚIA DE HOVER --- */
+/* 1. Schimbăm chenarul și textul */
+.nav-links a:hover,
+.nav-links a.active-link {
+    color: #1abc9c; /* Text verde */
+    border-color: #1abc9c; /* Chenar verde */
+    background: rgba(26, 188, 156, 0.1); /* Fundal verde foarte pal */
+    box-shadow: 0 4px 10px rgba(26, 188, 156, 0.2); /* Umbră verde strălucitoare */
+}
+
+/* 2. Linia verde care glisează (Animația care ți-a plăcut) */
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0; /* Pornim de la lățime 0 */
+    height: 3px;
+    background: #1abc9c;
+    transition: width 0.3s ease;
+}
+
+/* La hover sau dacă e activ, linia se face 100% */
+.nav-links a:hover::after,
+.nav-links a.active-link::after {
+    width: 100%;
+}
+
+/* --- BUTONUL HAMBURGER (Mobil) --- */
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* --- DROPDOWN SETĂRI (Rămâne la fel) --- */
+.settings-dropdown {
+    position: relative;
+}
 .dropdown-content {
     position: absolute;
     right: 0;
-    top: 50px; /* Imediat sub buton */
+    top: 60px;
     background-color: white;
-    min-width: 200px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    border-radius: 8px;
+    min-width: 220px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    border-radius: 12px;
     z-index: 1000;
     overflow: hidden;
-    animation: fadeIn 0.2s ease;
+    animation: slideDown 0.2s ease-out forwards;
+    transform-origin: top right;
+    border: 2px solid #1abc9c; /* Un mic accent verde la dropdown */
 }
-
-/* Informații user în meniu */
 .user-info-small {
     padding: 15px;
     background: #f8f9fa;
     color: #333;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     border-bottom: 1px solid #eee;
+    text-align: center;
 }
-
-/* Elementele din meniu */
 .dropdown-item {
     color: #333;
-    padding: 12px 16px;
+    padding: 12px 20px;
     text-decoration: none;
     display: block;
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background 0.2s, color 0.2s;
     font-weight: 500;
-    font-size: 0.95rem;
 }
-
 .dropdown-item:hover {
-    background-color: #f1f1f1;
-    color: #3498db;
+    background-color: #f1f5f9;
+    color: #1abc9c;
+}
+.logout-item { color: #e74c3c; border-top: 1px solid #eee; }
+.logout-item:hover { background-color: #fef2f2; color: #c0392b; }
+@keyframes slideDown {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-/* Stil specific pentru Logout */
-.logout-item {
-    color: #e74c3c;
-    border-top: 1px solid #eee;
+/* =======================================================
+   RESPONSIVE (Mobil - sub 992px)
+   ======================================================= */
+@media (max-width: 992px) {
+    .main-navbar { padding: 0.8rem 1rem; }
+    .hamburger-btn { display: block; order: -1; /* Hamburgerul primul în stânga */ }
+    
+    /* Resetăm marginile pe mobil */
+    .nav-links {
+        margin: 0;
+        position: absolute;
+        top: 65px;
+        left: -100%;
+        width: 100%;
+        background: #34495e;
+        flex-direction: column;
+        align-items: stretch; /* Butoane întinse pe toată lățimea */
+        padding: 15px;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+        transition: left 0.4s ease-in-out;
+        gap: 10px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .nav-links.mobile-open { left: 0; }
+
+    /* Stil butoane pe mobil */
+    .nav-links a {
+        font-size: 1.1rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
+    }
+    /* Pe mobil scoatem linia de jos și folosim doar schimbarea de culoare */
+    .nav-links a::after { display: none; }
 }
 
-.logout-item:hover {
-    background-color: #ffeaea;
-    color: #c0392b;
+/* =======================================================
+   ROTIȚA MECANICĂ CSS (Curățată și Funcțională)
+   ======================================================= */
+.btn-settings {
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.2);
+    width: 42px; 
+    height: 42px;
+    border-radius: 10px; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
 }
 
-/* Animație simplă */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.mechanical-gear {
+    position: relative;
+    width: 22px; 
+    height: 22px;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Efectul de hover pe buton (Chenar + Rotiță) */
+.btn-settings:hover {
+    border-color: #1abc9c;
+    background: rgba(26, 188, 156, 0.1);
+}
+
+.btn-settings:hover .mechanical-gear {
+    transform: rotate(90deg); /* Se rotește sfert de cerc */
+}
+
+/* Axul central al rotiței */
+.gear-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px; 
+    height: 10px;
+    background: #ecf0f1;
+    border-radius: 50%;
+    z-index: 2;
+    border: 2px solid #2c3e50; /* Găurica neagră din mijloc */
+    transition: background 0.3s ease;
+}
+
+/* Dinții rotiței */
+.gear-tooth {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; 
+    height: 4px;
+    background: #ecf0f1;
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+
+/* Rotim fiecare dinte ca să formăm un asterisc */
+.gear-tooth:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg); }
+.gear-tooth:nth-child(2) { transform: translate(-50%, -50%) rotate(45deg); }
+.gear-tooth:nth-child(3) { transform: translate(-50%, -50%) rotate(90deg); }
+.gear-tooth:nth-child(4) { transform: translate(-50%, -50%) rotate(135deg); }
+
+/* La hover, toată rotița se face verde */
+.btn-settings:hover .gear-core, 
+.btn-settings:hover .gear-tooth {
+    background: #1abc9c;
+}
+
+/* =======================================================
+   NOU: REGLAJE GLOBALE PENTRU MOBIL (Se aplică pe tot site-ul)
+   ======================================================= */
+@media (max-width: 768px) {
+    /* 1. Tăiem marginile uriașe ale tuturor paginilor */
+    .page-wrapper, .container, .wrapper, .main-content, .login-wrapper, .register-wrapper {
+        padding: 10px !important;
+        overflow-x: hidden !important;
+    }
+
+    /* 2. Forțăm toate cardurile să se îngusteze */
+    .glass-card, .card, .panel, .box, .login-card, .register-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px 15px !important;
+        margin: 0 auto 15px auto !important;
+        border-radius: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 3. Transformăm layout-urile orizontale în verticale */
+    .row, .flex-row, .button-group, .actions, .stats-row, .location-row, .modal-actions {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    /* 4. Orice input sau buton devine lat cât ecranul */
+    input, select, textarea, button, .btn, .btn-nature, .btn-save, .btn-map, .zona-badge {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* 5. Ajustăm textul să nu spargă designul */
+    h1 { font-size: 1.8rem !important; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.2rem !important; }
+
+    /* 6. Păstrăm hărțile și imaginile în frâu */
+    img, .map-container, iframe, canvas {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .map-container {
+        height: 300px !important; /* Hărți mai scunde pe telefon */
+    }
+
+    /* 7. Modalele (pop-up) ocupă ecranul eficient */
+    .glass-modal, .modal-content, .modal-overlay {
+        padding: 10px !important;
+        max-height: 95vh !important;
+        overflow-y: auto !important;
+        box-sizing: border-box !important;
+    }
 }

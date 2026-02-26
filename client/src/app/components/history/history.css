@@ -149,3 +149,27 @@ h2 {
 
 .btn-delete { background: #e74c3c; color: #fff; }
 .btn-delete:hover { background: #c0392b; }
+
+.btn-location {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  flex: 1; /* Pentru a fi egale ca lățime dacă folosești flexbox */
+}
+
+.btn-location:hover {
+  background-color: #2980b9;
+}
+
+/* Asigură-te că zona butoanelor e flexibilă pe mobil */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap; /* Să cadă pe rândul următor pe ecrane mici */
+}

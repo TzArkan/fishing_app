@@ -1,7 +1,7 @@
 /* --- LAYOUT GENERAL --- */
 .page-wrapper {
   /* Folosim min-height pentru a permite scroll-ul */
-  min-height: calc(100vh - 60px); /* Scădem înălțimea aproximativă a navbar-ului */
+  min-height: calc(100vh - 60px); 
   padding: 40px 20px;
   
   /* Fundal fix, dar gestionat corect */
@@ -11,7 +11,7 @@
   display: flex;
   justify-content: center;
   position: relative;
-  z-index: 1; /* Z-index mic pentru a nu acoperi navbar-ul */
+  z-index: 1; 
 }
 
 /* Overlay întunecat pentru lizibilitate */
@@ -20,7 +20,7 @@
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: -1; /* Trimitem overlay-ul în spatele conținutului */
+  z-index: -1; 
 }
 
 .glass-card {
@@ -30,7 +30,7 @@
   padding: 30px;
   border-radius: 20px;
   width: 100%;
-  max-width: 900px; /* Mai lat pentru a acomoda harta */
+  max-width: 900px; 
   box-shadow: 0 15px 35px rgba(0,0,0,0.3);
   height: fit-content;
 }
@@ -80,13 +80,8 @@
 /* --- ZONA RAPORTARE & HARTĂ --- */
 .report-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Două coloane: Harta + Formular */
+    grid-template-columns: 1fr 1fr; /* Două coloane pe desktop */
     gap: 20px;
-}
-
-@media(max-width: 768px) {
-    .report-grid { grid-template-columns: 1fr; }
-    .map-container { height: 300px; }
 }
 
 .map-container {
@@ -126,7 +121,7 @@
 /* --- MODAL HARTA SIMPLU --- */
 .map-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.6); /* Mai transparent */
+  background: rgba(0,0,0,0.6); 
   z-index: 9999;
   display: flex; justify-content: center; align-items: center;
   padding: 15px;
@@ -134,7 +129,7 @@
 
 .map-content {
   background: white;
-  width: 100%; max-width: 600px; /* Mai compact, ca un popup */
+  width: 100%; max-width: 600px; 
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -148,13 +143,6 @@
 .map-header h3 { margin: 0; font-size: 1.1rem; color: #333; }
 .close-x { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
 
-/* CONTAINERUL HĂRȚII */
-.map-container {
-  height: 400px; /* Înălțime fixă suficientă */
-  width: 100%;
-  background: #eee; /* Fundal gri până se încarcă */
-}
-
 .map-footer {
   padding: 15px; background: white; border-top: 1px solid #eee;
   display: flex; justify-content: flex-end; gap: 10px;
@@ -167,4 +155,33 @@
 .cancel-btn {
   background: #95a5a6; color: white; border: none; padding: 10px 20px;
   border-radius: 6px; cursor: pointer;
+}
+
+/* =======================================================
+   REGLAJE SPECIFICE PENTRU MOBIL (Legislatie)
+   ======================================================= */
+@media(max-width: 768px) {
+    .page-wrapper {
+        padding: 20px 10px; /* Mai puțin spațiu pe laterale */
+    }
+    .glass-card {
+        padding: 20px 15px;
+    }
+    .tabs {
+        flex-direction: column; /* Butoanele cad unul sub altul ca să încapă textul pe ele */
+        gap: 5px;
+    }
+    .law-card {
+        padding: 15px;
+    }
+    .report-grid { 
+        grid-template-columns: 1fr; /* Formularul cade sub hartă */
+    }
+    .map-container { 
+        height: 250px; 
+        min-height: 250px; 
+    }
+    .map-content {
+        max-height: 90vh; /* Nu lăsăm popup-ul hărții să depășească ecranul */
+    }
 }

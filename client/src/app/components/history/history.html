@@ -18,10 +18,14 @@
           alt="Peste"
         >
       </div>
+      
       <button *ngIf="!captura.is_public" (click)="publishToFeed(captura.id)" class="btn-post">
-    Postează în Feed
-</button>
-<span *ngIf="captura.is_public" style="color: green;"> Publicat</span>
+        Postează în Feed
+      </button>
+      <div *ngIf="captura.is_public" style="text-align: center; padding: 8px; background: #e8f8f5; color: #27ae60; font-weight: bold; border-bottom: 1px solid #eee;">
+        ✅ Publicat public
+      </div>
+
       <div class="card-content">
         <h3>{{ captura.specie }}</h3>
         <p style="color: #27ae60; font-weight: bold;">
@@ -32,6 +36,10 @@
         </p>
         
         <div class="card-actions">
+           <button *ngIf="captura.lat != null && captura.lng != null" (click)="openMap(captura.lat, captura.lng)" class="btn-location">
+             📍 Locația
+           </button>
+
            <button [routerLink]="['/edit-catch', captura.id]" class="btn-edit">
              ✏️ Editează
            </button>

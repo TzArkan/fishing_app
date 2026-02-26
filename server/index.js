@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-
+const FormData = require('form-data');
 const app = express();
 const port = 5000;
 const axios = require('axios');
@@ -19,6 +19,7 @@ const transporter = nodemailer.createTransport({
         pass: 'pzsz kgew vyay rzaz' // ⚠️ PUNE CODUL TĂU DE 16 LITERE AICI
     }
 });
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(express.json());
 
@@ -143,7 +144,6 @@ app.post('/api/forgot-password', async (req, res) => {
             return res.status(400).json({ message: "Emailul este obligatoriu!" });
         }
 
-        // A. Verificăm dacă userul există (Nu trimitem cod dacă nu are cont)
         const userCheck = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         if (userCheck.rows.length === 0) {
             return res.status(404).json({ message: "Nu există cont cu acest email." });
@@ -151,20 +151,26 @@ app.post('/api/forgot-password', async (req, res) => {
 
         const cod = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // B. Curățăm codurile vechi (exact ca la register/send-code)
         await pool.query("DELETE FROM verification_codes WHERE email = $1", [email]);
-
-        // C. Inserăm noul cod
-        // NOTĂ: Dacă la register îți merge fără ID, înseamnă că acolo merge. 
-        // Dacă totuși aici crapă, e din cauza diferenței de tabel, dar încercăm varianta standard întâi.
         await pool.query("INSERT INTO verification_codes (email, code) VALUES ($1, $2)", [email, cod]);
 
-        // D. Trimitem Email
+        // --- NOU: ȘTERGERE AUTOMATĂ DUPĂ 2 MINUTE ---
+        setTimeout(async () => {
+            try {
+                const result = await pool.query("DELETE FROM verification_codes WHERE email = $1 AND code = $2", [email, cod]);
+                if (result.rowCount > 0) {
+                    console.log(`[CLEANUP] Codul de resetare pentru ${email} a expirat și a fost șters.`);
+                }
+            } catch (err) {
+                console.error("Eroare la ștergerea automată a codului:", err.message);
+            }
+        }, 2 * 60 * 1000); // 120.000 milisecunde (2 minute)
+
         const mailOptions = {
             from: 'Fishing App <noreply@fishingapp.com>',
             to: email,
             subject: 'Resetare Parolă',
-            text: `Salut! Codul tău de resetare este: ${cod}`
+            text: `Salut! Codul tău de resetare este: ${cod}. Codul expiră în 2 minute.`
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -172,7 +178,7 @@ app.post('/api/forgot-password', async (req, res) => {
                 console.error("Eroare mail:", error);
                 return res.status(500).json({ message: "Eroare la trimiterea emailului." });
             }
-            res.json({ message: "Codul a fost trimis pe email!" });
+            res.json({ message: "Codul a fost trimis pe email! (Valabil 2 minute)" });
         });
 
     } catch (err) {
@@ -181,7 +187,7 @@ app.post('/api/forgot-password', async (req, res) => {
     }
 });
 
-// 2. VERIFICĂ COD ȘI SCHIMBĂ PAROLA
+
 app.post('/api/reset-password', async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
@@ -190,7 +196,7 @@ app.post('/api/reset-password', async (req, res) => {
             return res.status(400).json({ message: "Toate câmpurile sunt obligatorii!" });
         }
 
-        // A. Verificăm codul în tabelul verification_codes
+      
         const codeCheck = await pool.query(
             "SELECT * FROM verification_codes WHERE email = $1 AND code = $2", 
             [email, code]
@@ -200,11 +206,11 @@ app.post('/api/reset-password', async (req, res) => {
             return res.status(400).json({ message: "Cod incorect sau expirat!" });
         }
 
-        // B. Hashuim parola nouă
+     
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-        // C. Actualizăm parola utilizatorului
+
         await pool.query(
             "UPDATE users SET password = $1 WHERE email = $2",
             [hashedPassword, email]
@@ -422,7 +428,8 @@ const upload = multer({ storage: storage });
 
 app.post('/api/capturi', upload.single('poza'), async (req, res) => {
     try {
-        let { specie, lungime, detalii, user_id, userId, data_capturii } = req.body;
+        // 1. AICI AM REPARAT: Am adăugat lat și lng în extragere
+        let { specie, lungime, detalii, user_id, userId, data_capturii, lat, lng } = req.body;
         const finalUserId = user_id || userId;
         console.log(`[ADD] Se încearcă adăugarea pentru User ID: ${finalUserId}`);
 
@@ -436,12 +443,17 @@ app.post('/api/capturi', upload.single('poza'), async (req, res) => {
             pozaUrl = 'uploads/' + req.file.filename;
         }
 
+        // 2. AICI AM REPARAT: Convertim coordonatele în numere cu zecimale, sau lăsăm null dacă lipsesc
+        const finalLat = lat ? parseFloat(lat) : null;
+        const finalLng = lng ? parseFloat(lng) : null;
+
+        // 3. AICI AM REPARAT: Am adăugat lat și lng în comanda SQL ($7 și $8)
         const newCatch = await pool.query(
-            "INSERT INTO capturi (specie, lungime, detalii, poza_url, user_id, data_capturii) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            [specie, lungime, detalii, pozaUrl, finalUserId, data_capturii]
+            "INSERT INTO capturi (specie, lungime, detalii, poza_url, user_id, data_capturii, lat, lng) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+            [specie, lungime, detalii, pozaUrl, finalUserId, data_capturii, finalLat, finalLng]
         );
         
-        console.log(`[ADD SUCCESS] Captura ID ${newCatch.rows[0].id} salvată pentru user ${finalUserId}`);
+        console.log(`[ADD SUCCESS] Captura ID ${newCatch.rows[0].id} salvată cu locația (${finalLat}, ${finalLng})`);
         res.json(newCatch.rows[0]);
 
     } catch (err) {
@@ -595,7 +607,7 @@ app.delete('/api/capturi/:id', async (req, res) => {
 app.put('/api/capturi/:id', upload.single('poza'), async (req, res) => {
     try {
         const { id } = req.params;
-        const { specie, lungime, detalii } = req.body;
+        const { specie, lungime, detalii, lat, lng, user_id } = req.body;
         let pozaUrl = null;
         if (req.file) {
             pozaUrl = 'uploads/' + req.file.filename;
@@ -620,9 +632,8 @@ app.post('/api/send-code', async (req, res) => {
         }
 
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: "Email invalid! (ex: nume@domeniu.com)" });
+            return res.status(400).json({ message: "Email invalid!" });
         }
 
         const checkName = await pool.query("SELECT * FROM users WHERE nume = $1", [nume]);
@@ -640,11 +651,24 @@ app.post('/api/send-code', async (req, res) => {
         await pool.query("DELETE FROM verification_codes WHERE email = $1", [email]);
         await pool.query("INSERT INTO verification_codes (email, code) VALUES ($1, $2)", [email, cod]);
 
+        // --- NOU: ȘTERGERE AUTOMATĂ DUPĂ 2 MINUTE ---
+        setTimeout(async () => {
+            try {
+                // Ștergem codul doar dacă este același (evităm ștergerea unui cod nou dacă userul a cerut altul între timp)
+                const result = await pool.query("DELETE FROM verification_codes WHERE email = $1 AND code = $2", [email, cod]);
+                if (result.rowCount > 0) {
+                    console.log(`[CLEANUP] Codul de înregistrare pentru ${email} a expirat și a fost șters.`);
+                }
+            } catch (err) {
+                console.error("Eroare la ștergerea automată a codului:", err.message);
+            }
+        }, 2 * 60 * 1000); // 2 minute * 60 sec * 1000 ms
+
         const mailOptions = {
             from: 'Fishing App <noreply@fishingapp.com>',
             to: email,
             subject: 'Codul tău de verificare',
-            text: `Salut ${nume}! Codul tău este: ${cod}`
+            text: `Salut ${nume}! Codul tău este: ${cod}. Acesta este valabil 2 minute.`
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -652,7 +676,7 @@ app.post('/api/send-code', async (req, res) => {
                 console.error("Eroare mail:", error);
                 return res.status(500).json({ message: "Nu am putut trimite emailul." });
             }
-            res.json({ message: "Cod trimis cu succes!" });
+            res.json({ message: "Cod trimis cu succes! (Valabil 2 minute)" });
         });
 
     } catch (err) {
@@ -742,6 +766,31 @@ app.post('/api/login', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send("Eroare server");
+    }
+});
+
+app.post('/api/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Te rog introdu un email." });
+        }
+
+        // Căutăm email-ul în baza de date folosind pool.query (sintaxa ta SQL)
+        const userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+
+        // Dacă lungimea array-ului de rezultate este 0, înseamnă că nu există
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: "Nu am găsit niciun cont cu acest email." });
+        }
+
+        // Dacă a găsit, trimitem mesaj de succes pentru a trece la Pasul 2 (Parolă)
+        res.status(200).json({ message: "Email valid, treci la parolă." });
+
+    } catch (err) {
+        console.error("Eroare la verificarea email-ului:", err.message);
+        res.status(500).json({ message: "Eroare internă de server." });
     }
 });
 
@@ -1213,6 +1262,89 @@ app.post('/api/messages', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); }
 });
 
+// --- RUTA NOUĂ: INTEGRARE AI PYTHON (IDENTIFICARE PEȘTE) ---
+app.post('/api/identifica-peste', upload.single('file'), async (req, res) => {
+    // Notă: În Angular am pus formData.append('file', ...), deci aici folosim 'file'
+    if (!req.file) {
+        return res.status(400).json({ error: 'Nu ai trimis nicio poză' });
+    }
+
+    try {
+        console.log("🐟 Poză primită pentru AI, se trimite la serviciul Python...");
+
+        // 1. Pregătim datele pentru a le trimite la containerul Python
+        const formData = new FormData();
+        // Citim fișierul temporar salvat de Multer și îl punem în stream
+        formData.append('file', fs.createReadStream(req.file.path));
+
+        // 2. Comunicăm cu serviciul Python prin rețeaua Docker
+        // 'ai-service' este numele serviciului definit în docker-compose.yml
+        const pythonResponse = await axios.post('http://ai-service:5001/predict_internal', formData, {
+            headers: {
+                ...formData.getHeaders() // Important pentru multipart/form-data
+            }
+        });
+
+        // 3. Ștergem fișierul temporar (nu vrem să umplem serverul cu poze de test)
+        fs.unlink(req.file.path, (err) => {
+            if (err) console.error("Eroare la ștergerea pozei temporare:", err);
+        });
+
+        // 4. Procesăm răspunsul primit de la Python
+        const result = pythonResponse.data;
+
+        // Dicționar Traducere (Pentru a trimite numele în română înapoi la Angular)
+        const dictionarPesti = {
+            'Abramis brama': 'Plătică',
+            'Acipenseridae': 'Sturion',
+            'Anguilla anguilla': 'Anghilă',
+            'Aspius aspius': 'Avat',
+            'Barbus barbus': 'Mreană',
+            'Blicca bjoerkna': 'Batcă / Blică',
+            'Carassius carassius': 'Caras Auriu (Carudă)',
+            'Carassius gibelio': 'Caras Argintiu',
+            'Ctenopharyngodon idella': 'Amur (Cteno)',
+            'Cyprinus carpio': 'Crap',
+            'Esox lucius': 'Știucă',
+            'Gasterosteus aculeatus': 'Ghidrin',
+            'Gobio gobio': 'Porcușor',
+            'Gymnocephalus cernuus': 'Ghiborț',
+            'Lepomis gibbosus': 'Regina (Biban Soare)',
+            'Leuciscus cephalus': 'Clean',
+            'Leuciscus idus': 'Văduviță',
+            'Leuciscus leuciscus': 'Clean mic (Dălbioară)',
+            'Neogobius fluviatilis': 'Guvid de baltă',
+            'Neogobius kessleri': 'Guvid de Dunăre',
+            'Neogobius melanostomus': 'Guvid rotund',
+            'Perca fluviatilis': 'Biban',
+            'Rhodeus amarus': 'Boarță',
+            'Rutilus rutilus': 'Babușcă',
+            'Salmo trutta subsp. fario': 'Păstrăv Indigen',
+            'Sander lucioperca': 'Șalău',
+            'Scardinius erythrophthalmus': 'Roșioară',
+            'Silurus glanis': 'Somn',
+            'Tinca tinca': 'Lin',
+            'Vimba vimba': 'Morunaș'
+        };
+
+        const numeRomanesc = dictionarPesti[result.latin_name] || result.latin_name;
+
+        // 5. Trimitem răspunsul final la Angular
+        res.json({
+            fish_name: numeRomanesc,
+            confidence: result.confidence.toFixed(1) + '%',
+            latin_name: result.latin_name
+        });
+
+    } catch (error) {
+        console.error('❌ Eroare comunicare AI:', error.message);
+        // Dacă ștergerea a eșuat mai sus din cauza erorii, încercăm din nou
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        
+        res.status(500).json({ error: 'Serviciul AI nu răspunde sau a apărut o eroare.' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
     console.log(`Cale Uploads configurată la: ${uploadDir}`);
@@ -1231,9 +1363,6 @@ app.post('/api/reports', upload.single('poza'), async (req, res) => {
         // 2. Curățăm datele (userId poate veni ca string "null")
         const finalUserId = (userId && userId !== 'null' && !isNaN(userId)) ? userId : null;
 
-        // 3. Salvăm în baza de date (inclusiv photo_url)
-        // ATENȚIE: Asigură-te că ai coloana 'photo_url' în tabelul reports!
-        // Dacă nu o ai, rulează în SQL: ALTER TABLE reports ADD COLUMN photo_url VARCHAR(255);
         const newReport = await pool.query(
             `INSERT INTO reports (user_id, latitude, longitude, location_text, description, date_incident, photo_url, status) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') RETURNING *`,

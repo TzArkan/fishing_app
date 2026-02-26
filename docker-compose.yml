@@ -12,6 +12,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: always
+
   server:
     build: ./server
     ports:
@@ -24,11 +25,13 @@ services:
       - DB_NAME=postgres
     depends_on:
       - db
+      - ai-service  # <--- AM ADĂUGAT DOAR ASTA (ca să vadă containerul de Python)
     volumes:
       - ./server:/app
       - /app/node_modules
       - ./server/uploads:/app/uploads
     restart: always
+
   client:
     build: ./client
     ports:
@@ -36,5 +39,16 @@ services:
     depends_on:
       - server
     restart: always
+
+  # --- SERVICIUL NOU (Adăugat pentru a rula modelul .h5) ---
+  ai-service:
+    build: ./ai_service
+    ports:
+      - "5001:5001"
+    volumes:
+      # Mapăm modelul din folderul tău în container
+      - ./ai_service/model_pesti_final.h5:/app/model_pesti_final.h5
+    restart: always
+
 volumes:
   pgdata:

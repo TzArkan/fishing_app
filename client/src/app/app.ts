@@ -1,6 +1,6 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core'; // <--- IMPORTĂ Inject, PLATFORM_ID
+import { Component, Inject, PLATFORM_ID } from '@angular/core'; 
 import { RouterOutlet, Router, NavigationEnd, RouterLink } from '@angular/router'; 
-import { CommonModule, isPlatformBrowser } from '@angular/common'; // <--- IMPORTĂ isPlatformBrowser
+import { CommonModule, isPlatformBrowser } from '@angular/common'; 
 
 @Component({
   selector: 'app-root',
@@ -14,9 +14,13 @@ export class App {
   showMenu: boolean = true;
   currentUser: any = null;
   showSettingsMenu: boolean = false;
+
+  // --- STAREA PENTRU MENIUL DE MOBIL ---
+  isMobileMenuOpen: boolean = false;
+
   constructor(
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object // <--- INJECTĂM ID-UL PLATFORMEI
+    @Inject(PLATFORM_ID) private platformId: Object 
   ) {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
@@ -28,7 +32,6 @@ export class App {
            this.showMenu = true;
         }
 
-        // 👇 SOLUȚIA: Executăm asta DOAR dacă suntem în browser
         if (isPlatformBrowser(this.platformId)) {
             const userStr = localStorage.getItem('user');
             if (userStr) {
@@ -37,14 +40,36 @@ export class App {
               this.currentUser = null;
             }
         }
+        
+        // Închidem meniul automat când navigăm pe o altă pagină
+        this.isMobileMenuOpen = false;
+        this.showSettingsMenu = false; 
       }
     });
   }
-  toggleSettings() {
-    this.showSettingsMenu = !this.showSettingsMenu;
+
+  // --- FUNCȚII PENTRU MENIUL DE MOBIL ȘI SETĂRI ---
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    // Dacă deschidem meniul principal, ascundem setările ca să nu se suprapună
+    if (this.isMobileMenuOpen) {
+      this.showSettingsMenu = false;
+    }
   }
 
- logout() {
+  closeMobileMenu() {
+    this.isMobileMenuOpen = false;
+  }
+
+  toggleSettings() {
+    this.showSettingsMenu = !this.showSettingsMenu;
+    // Dacă deschidem setările, ascundem meniul principal pe mobil
+    if (this.showSettingsMenu) {
+      this.isMobileMenuOpen = false;
+    }
+  }
+
+  logout() {
     this.showSettingsMenu = false; // Ascundem meniul
     if (isPlatformBrowser(this.platformId)) {
         localStorage.removeItem('user');

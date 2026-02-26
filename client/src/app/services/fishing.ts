@@ -35,7 +35,9 @@ acceptFriendRequest(requesterId: number, addresseeId: number) { // requesterId e
 getMessages(myId: number, otherId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/messages/${otherId}?myId=${myId}`);
 }
-
+checkEmail(data: { email: string }) {
+    return this.http.post<any>(`${this.baseUrl}/check-email`, data);
+  }
 
 sendMessage(senderId: number, receiverId: number, text: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/messages`, { senderId, receiverId, text });

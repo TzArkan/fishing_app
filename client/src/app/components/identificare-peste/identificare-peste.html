@@ -1,0 +1,55 @@
+<div class="page-wrapper">
+  
+  <h2>Identificare pesti</h2>
+
+  <div class="identify-container">
+    
+    <div class="catch-card main-card">
+      
+      <div class="upload-section" *ngIf="!imagePreview" (click)="fileInput.click()">
+        <div class="icon-upload">📷</div>
+        <h3>Încarcă o fotografie</h3>
+        <p>Apasă aici pentru a selecta o imagine cu captura ta</p>
+        <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+        <button class="btn-post">Selectează Poza</button>
+      </div>
+
+      <div class="result-section" *ngIf="imagePreview">
+        
+        <div class="card-image preview-image">
+          <img [src]="imagePreview" alt="Preview Pește">
+        </div>
+
+        <div class="card-content">
+          <div *ngIf="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Analizez trăsăturile...</p>
+          </div>
+
+          <div *ngIf="!isLoading && predictionResult" class="success-state">
+            <p class="label">Am identificat:</p>
+            <h1 class="fish-name">{{ predictionResult }}</h1>
+            <p class="latin-name">({{ latinName }})</p>
+            
+            <div class="confidence-badge">
+              Siguranță: <strong>{{ predictionConfidence }}</strong>
+            </div>
+
+            <div class="info-box">
+              <p> Dacă procentul e sub 50%, încearcă o poză mai clară.</p>
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="error-state">
+            <p>⚠️ {{ errorMessage }}</p>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn-delete" (click)="reset()">Încearcă altă poză</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

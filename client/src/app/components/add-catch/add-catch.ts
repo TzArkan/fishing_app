@@ -2,6 +2,7 @@ import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FishingService } from '../../services/fishing';
 
 const POLYGON_DELTA = [
@@ -10,22 +11,18 @@ const POLYGON_DELTA = [
 ];
 
 function detecteazaZona(lat: number, lng: number): string {
-  
   if (isPointInPolygon({ lat, lng }, POLYGON_DELTA)) {
       return 'delta';
   }
   if (lng > 27.8 && lat > 45.3 && lat < 48.3) {
       return 'frontiera';
   }
-
   if (lat < 44.6 && lng > 21.5 && lng < 28.2) {
       return 'frontiera';
   }
-
   if (lat > 47.8 && lng < 24.5) {
       return 'frontiera';
   }
-
   return 'general';
 }
 
@@ -40,42 +37,21 @@ function isPointInPolygon(point: any, vs: any[]) {
 }
 
 // --- CONFIGURARE PROHIBIȚIE STANDARD ---
-// Se aplică speciilor care nu au date specifice
 const PROHIBITIE_STANDARD = {
   'general':   { s: '04-09', e: '06-07' }, // 9 Apr - 7 Iun
   'frontiera': { s: '04-24', e: '06-07' }, // 24 Apr - 7 Iun
-  'delta':     { s: '04-09', e: '06-07' }  // Delta (aliniat la general în lipsa altor date)
+  'delta':     { s: '04-09', e: '06-07' }  // Delta 
 };
 
 // --- REGULI PESCUIT (DIMENSIUNI & EXCEPȚII) ---
 const REGULI_PESCUIT: any = {
-  // 1. SPECII CU PROHIBIȚIE SPECIFICĂ (Datele tale)
-  'Știucă': { 
-    min: 40, 
-    prohibitie: { // 1 Feb - 20 Mar (toate zonele)
-      'general': {s:'02-01', e:'03-20'}, 'frontiera': {s:'02-01', e:'03-20'}, 'delta': {s:'02-01', e:'03-20'} 
-    } 
-  },
-  'Șalău': { 
-    min: 40, 
-    prohibitie: { // 20 Mar - 7 Iun (toate zonele)
-      'general': {s:'03-20', e:'06-07'}, 'frontiera': {s:'03-20', e:'06-07'}, 'delta': {s:'03-20', e:'06-07'} 
-    } 
-  },
-  'Biban': { 
-    min: 12, 
-    prohibitie: { // 20 Mar - 7 Iun (toate zonele - grupat cu Șalăul)
-      'general': {s:'03-20', e:'06-07'}, 'frontiera': {s:'03-20', e:'06-07'}, 'delta': {s:'03-20', e:'06-07'} 
-    } 
-  },
-  'Păstrăv': { 
-    min: 20, 
-    prohibitie: { // 1 Oct - 31 Mar (peste an)
-      'general': {s:'10-01', e:'03-31'}, 'frontiera': {s:'10-01', e:'03-31'}, 'delta': {s:'10-01', e:'03-31'} 
-    } 
-  },
+  // 1. SPECII CU PROHIBIȚIE SPECIFICĂ
+  'Știucă': { min: 40, prohibitie: { 'general': {s:'02-01', e:'03-20'}, 'frontiera': {s:'02-01', e:'03-20'}, 'delta': {s:'02-01', e:'03-20'} } },
+  'Șalău': { min: 40, prohibitie: { 'general': {s:'03-20', e:'06-07'}, 'frontiera': {s:'03-20', e:'06-07'}, 'delta': {s:'03-20', e:'06-07'} } },
+  'Biban': { min: 12, prohibitie: { 'general': {s:'03-20', e:'06-07'}, 'frontiera': {s:'03-20', e:'06-07'}, 'delta': {s:'03-20', e:'06-07'} } },
+  'Păstrăv': { min: 20, prohibitie: { 'general': {s:'10-01', e:'03-31'}, 'frontiera': {s:'10-01', e:'03-31'}, 'delta': {s:'10-01', e:'03-31'} } },
 
-  // 2. SPECII STANDARD (Folosesc regula generală/frontieră)
+  // 2. SPECII STANDARD
   'Crap':     { min: 35, standard: true },
   'Somn':     { min: 50, standard: true },
   'Caras':    { min: 20, standard: true },
@@ -85,18 +61,19 @@ const REGULI_PESCUIT: any = {
   'Plătică':  { min: 25, standard: true },
   'Lin':      { min: 25, standard: true },
   'Scobar':   { min: 20, standard: true },
-  'Lipan':    { min: 25, standard: true }, // Atenție: Uneori e protejat, dar am pus limita cerută
+  'Lipan':    { min: 25, standard: true }, 
   'Babușcă':  { min: 15, standard: true },
   'Roșioară': { min: 15, standard: true },
+  'Morunaș': { min: 25, standard: true },
   
   // Altele
-  'Sturion':  { protejat: true } // Rămâne protejat
+  'Sturion':  { protejat: true } 
 };
 
 @Component({
   selector: 'app-add-catch',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, HttpClientModule],
   templateUrl: './add-catch.html',
   styleUrls: ['./add-catch.css']
 })
@@ -108,11 +85,10 @@ export class AddCatchComponent implements OnInit {
   private marker: any = null;
   selectedLat: number = 46.0;
   selectedLng: number = 25.0;
-  
+  maxDate: string = '';
   zonaDetectata: string = 'general';
   zonaNumeAfisat: string = 'Ape Interioare';
 
-  // Generăm lista de specii direct din cheile obiectului de reguli + "Altă specie"
   speciiLista: string[] = [...Object.keys(REGULI_PESCUIT), 'Altă specie'].sort();
   
   specie: string = ''; 
@@ -120,14 +96,21 @@ export class AddCatchComponent implements OnInit {
   detalii: string = '';
   dataCapturii: string = ''; 
   selectedFile: File | null = null;
+  imagePreview: string | ArrayBuffer | null = null;
+
+  isPredicting = false;
+  aiConfidence: number | null = null;
 
   constructor(
     private fishingService: FishingService,
     private router: Router,
+    private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
+    this.maxDate = new Date().toISOString().split('T')[0];
+    this.dataCapturii = this.maxDate;
     this.dataCapturii = new Date().toISOString().split('T')[0];
     if (isPlatformBrowser(this.platformId) && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -146,36 +129,26 @@ export class AddCatchComponent implements OnInit {
       else this.zonaNumeAfisat = 'Ape Interioare 🏞️';
   }
 
- async openMapPicker() {
+  async openMapPicker() {
     this.showMapModal = true;
     if (isPlatformBrowser(this.platformId)) {
         if (!this.L) {
             this.L = await import('leaflet');
         }
-        
         this.initMap();
     }
   }
 
   initMap() {
-   
     if (this.map) {
         this.map.remove();
         this.map = null;
     }
-
-    // 2. IMPORTANT: Folosim un mic delay ca să fim siguri că <div id="catch-map"> există în pagină
     setTimeout(() => {
-        // Verificăm din nou dacă elementul există înainte de a crea harta
         const mapElement = document.getElementById('catch-map');
         if (!mapElement) return;
 
-        // 3. Creăm harta
-        this.map = this.L.map('catch-map', { 
-            center: [this.selectedLat, this.selectedLng], 
-            zoom: 7 
-        });
-
+        this.map = this.L.map('catch-map', { center: [this.selectedLat, this.selectedLng], zoom: 7 });
         this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(this.map);
@@ -188,12 +161,9 @@ export class AddCatchComponent implements OnInit {
             this.updateMarker(pos.lat, pos.lng);
         });
         
-        // 4. Invalidate Size pentru a preveni harta gri
         this.map.invalidateSize();
-        
-    }, 100); // 100ms delay
+    }, 100);
   }
-
 
   updateMarker(lat: number, lng: number) {
       this.selectedLat = lat;
@@ -217,33 +187,91 @@ export class AddCatchComponent implements OnInit {
         this.map = null; 
     }
   }
-  onFileSelected(event: any) { this.selectedFile = event.target.files[0]; }
+
+  // ==========================================
+  // LOGICA FOTO (Inclusiv Previzualizare)
+  // ==========================================
+  onFileSelected(event: any) { 
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      this.aiConfidence = null; // Resetăm AI dacă se schimbă poza
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imagePreview = e.target?.result || null; 
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removePhoto() {
+    this.selectedFile = null;
+    this.imagePreview = null;
+    this.aiConfidence = null;
+    this.specie = ''; 
+    const fileInput = document.getElementById('photoInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  }
+
+  // ==========================================
+  // FUNCȚIE DE IDENTIFICARE AI
+  // ==========================================
+  identificaPoza() {
+      if (!this.selectedFile) {
+          alert("Te rog adaugă o poză mai întâi pentru a identifica peștele!");
+          return;
+      }
+
+      this.isPredicting = true;
+      const formData = new FormData();
+      formData.append('file', this.selectedFile);
+
+      this.http.post<any>('http://localhost:5000/api/identifica-peste', formData)
+        .subscribe({
+          next: (response) => {
+            this.isPredicting = false;
+            
+            // Transformăm în număr rotund (din 98.765 devine 99)
+            const acuratete = Math.round(Number(response.confidence));
+
+            if (this.speciiLista.includes(response.fish_name)) {
+                this.specie = response.fish_name; 
+                this.aiConfidence = acuratete; 
+            } else {
+                alert(`AI a detectat: ${response.fish_name} (${acuratete}%), dar nu este în lista de reguli. Am setat pe "Altă specie".`);
+                this.specie = 'Altă specie';
+                this.aiConfidence = acuratete;
+            }
+          },
+          error: (error) => {
+            console.error("Eroare AI:", error);
+            alert("Nu am putut identifica peștele din poză. Serverul AI ar putea fi oprit.");
+            this.isPredicting = false;
+          }
+        });
+  }
 
   // --- VALIDARE LEGALĂ ---
   valideazaLegalitate(): boolean {
     const regulaSpecie = REGULI_PESCUIT[this.specie];
     if (!regulaSpecie) return true;
 
-    // 1. Protejat
     if (regulaSpecie.protejat) {
       alert(`❌ ILEGAL: ${this.specie} este specie protejată!`);
       return false;
     }
 
-    // 2. Dimensiune
     if (this.lungime && this.lungime < regulaSpecie.min) {
       alert(`⚠️ SUBDIMENSIUNE: ${this.specie} trebuie să aibă minim ${regulaSpecie.min} cm.`);
       return false;
     }
 
-    // 3. Prohibiție
     if (this.dataCapturii) {
       let regulaDate;
-      // Dacă specia are reguli explicite (ex: Știucă), le folosim
       if (regulaSpecie.prohibitie) {
         regulaDate = regulaSpecie.prohibitie[this.zonaDetectata];
       } 
-      // Altfel, dacă e standard, folosim calendarul standard (General vs Frontieră)
       else if (regulaSpecie.standard) {
         regulaDate = PROHIBITIE_STANDARD[this.zonaDetectata as keyof typeof PROHIBITIE_STANDARD];
       }
@@ -254,12 +282,10 @@ export class AddCatchComponent implements OnInit {
         const start = new Date(`${an}-${regulaDate.s}`);
         const end = new Date(`${an}-${regulaDate.e}`);
 
-        // Verificăm intervalul (inclusiv peste an pt Păstrăv)
         let inProhibitie = false;
         if (start <= end) {
             inProhibitie = dataSelectata >= start && dataSelectata <= end;
         } else {
-            // Cazul când start > end (ex: Octombrie -> Martie)
             inProhibitie = dataSelectata >= start || dataSelectata <= end;
         }
 
@@ -273,9 +299,16 @@ export class AddCatchComponent implements OnInit {
   }
 
   onSubmit() {
+    if (this.dataCapturii > this.maxDate) {
+      alert("Eroare: Nu poți adăuga o captură într-o dată viitoare!");
+      return;
+    }
     const userString = localStorage.getItem('user');
     if (!userString) { this.router.navigate(['/login']); return; }
     const user = JSON.parse(userString);
+
+    // Am scos validarea de poză obligatorie aici pentru că o ai deja sus, dar poți să o lași dacă vrei să forțezi o poză la orice captură
+    // if (!this.selectedFile) { alert("Te rog adaugă o fotografie a capturii!"); return; }
 
     if (!this.specie) { alert("Alege specia!"); return; }
     if (this.lungime !== null && this.lungime < 0) { alert("Lungime invalidă!"); return; }

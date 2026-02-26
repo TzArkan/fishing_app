@@ -1,73 +1,49 @@
-<nav *ngIf="showMenu" style="background: #2c3e50; padding: 1rem; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+<nav *ngIf="showMenu" class="main-navbar">
   
-  <div style="display: flex; align-items: center; flex-wrap: wrap;"> <a routerLink="/feed" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
-        Feed
-    </a>
-
-    <a *ngIf="currentUser" 
-       [routerLink]="['/profile', currentUser.id]" 
-       routerLinkActive="active-link" 
-       style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
-        Profil
-    </a>
-
-    <a routerLink="/adauga" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
-        Adaugă Captură
-    </a>
-    <a routerLink="/istoric" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
-        Capturi
-    </a>
-    <a routerLink="/harta" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
-       Hartă
-    </a>
-    <a routerLink="/calendar" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;">
-       Calendar pescuit
-    </a>
-    <a routerLink="/enciclopedie" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;"> 
-       Enciclopedie
-    </a>
-    <a routerLink="/legislatie" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;"> 
-       Legislație
-    </a>
-
-    
-
-    <a routerLink="/social" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;"> 
-      Prieteni
-    </a>
-    
-    <a routerLink="/messages" routerLinkActive="active-link" style="color: white; text-decoration: none; font-size: 18px; font-weight: bold; margin-right: 20px;"> 
-       Mesaje
-    </a>
-
+  <div class="nav-zone left">
+    <button class="hamburger-btn" (click)="toggleMobileMenu()">☰</button>
   </div>
-    
-  <div class="settings-dropdown" style="position: relative;">
-    
-    <button (click)="toggleSettings()" class="btn-settings">
-        ⚙️ </button>
 
-    <div *ngIf="showSettingsMenu" class="dropdown-content">
-        
-        <div class="user-info-small">
-            <small>Autentificat ca:</small><br>
-            <strong>{{ currentUser?.nume }}</strong>
-        </div>
-        <hr>
-        
-        <a routerLink="/profil" (click)="showSettingsMenu = false" class="dropdown-item">
-             Editează Profil
-        </a>
-        <a *ngIf="currentUser && currentUser.role === 'admin'"  routerLink="/admin" (click)="showSettingsMenu = false" class="dropdown-item">
-          Raporturi
-        </a>
-        <a (click)="logout()" class="dropdown-item logout-item">
-             Ieșire Cont
-        </a>
-
+  <div class="nav-zone center">
+    <div class="nav-links" [class.mobile-open]="isMobileMenuOpen">
+      <a routerLink="/feed" routerLinkActive="active-link" (click)="closeMobileMenu()">Feed</a>
+      <a *ngIf="currentUser" [routerLink]="['/profile', currentUser.id]" routerLinkActive="active-link" (click)="closeMobileMenu()">Profil</a>
+      <a routerLink="/adauga" routerLinkActive="active-link" (click)="closeMobileMenu()">Adaugă Captură</a>
+      <a routerLink="/istoric" routerLinkActive="active-link" (click)="closeMobileMenu()">Capturi</a>
+      <a routerLink="/harta" routerLinkActive="active-link" (click)="closeMobileMenu()">Hartă</a>
+      <a routerLink="/calendar" routerLinkActive="active-link" (click)="closeMobileMenu()">Calendar pescuit</a>
+      <a routerLink="/enciclopedie" routerLinkActive="active-link" (click)="closeMobileMenu()">Enciclopedie</a>
+      <a routerLink="/legislatie" routerLinkActive="active-link" (click)="closeMobileMenu()">Legislație</a>
+      <a routerLink="/social" routerLinkActive="active-link" (click)="closeMobileMenu()">Prieteni</a>
+      <a routerLink="/messages" routerLinkActive="active-link" (click)="closeMobileMenu()">Mesaje</a>
+      <a routerLink="/identificare" routerLinkActive="active-link" (click)="closeMobileMenu()">Identificare Pește</a>
     </div>
+  </div>
 
-</div>
+  <div class="nav-zone right">
+    <div class="settings-dropdown">
+      <button (click)="toggleSettings()" class="btn-settings">
+        <div class="mechanical-gear">
+          <div class="gear-tooth"></div>
+          <div class="gear-tooth"></div>
+          <div class="gear-tooth"></div>
+          <div class="gear-tooth"></div>
+          <div class="gear-core"></div>
+        </div>
+      </button>
+
+      <div *ngIf="showSettingsMenu" class="dropdown-content">
+          <div class="user-info-small">
+              <small>Salut,</small><br>
+              <strong>{{ currentUser?.nume }}</strong>
+          </div>
+          <hr>
+          <a routerLink="/profil" (click)="showSettingsMenu = false" class="dropdown-item">Editează Profil</a>
+          <a *ngIf="currentUser?.role === 'admin'" routerLink="/admin" (click)="showSettingsMenu = false" class="dropdown-item">Raporturi</a>
+          <a (click)="logout()" class="dropdown-item logout-item">Ieșire Cont</a>
+      </div>
+    </div>
+  </div>
 
 </nav>
 

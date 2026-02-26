@@ -16,7 +16,6 @@ export class HistoryComponent implements OnInit {
   serverUrl = 'http://localhost:5000'; 
   capturi: any[] = [];
   
-  // ⚠️ SCHIMBARE: Nu mai punem 1 hardcodat. Îl lăsăm null la început.
   userId: number | null = null;
 
   constructor(
@@ -32,11 +31,9 @@ export class HistoryComponent implements OnInit {
 
     this.service.publishCaptura(id).subscribe({
       next: (res) => {
-        // Succes! Acum actualizăm vizual captura în listă
-        // Căutăm captura cu acest ID și îi spunem că e publică
         const captura = this.capturi.find(c => c.id === id);
         if (captura) {
-          captura.is_public = true; // Asta face butonul să dispară și să apară bifa
+          captura.is_public = true; 
         }
         alert('Captura a fost postată în Feed! 🌍');
       },
@@ -49,25 +46,21 @@ export class HistoryComponent implements OnInit {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      // ⚠️ AICI E REPARAȚIA: Aflăm cine e logat cu adevărat
-      const userString = localStorage.getItem('user'); // Verifică dacă cheia ta de login e 'user' sau 'currentUser'
+      const userString = localStorage.getItem('user'); 
 
       if (userString) {
         const user = JSON.parse(userString);
-        this.userId = user.id; // Luăm ID-ul real al utilizatorului
+        this.userId = user.id; 
         console.log("Utilizator logat detectat ID:", this.userId);
         
-        // Abia acum încărcăm capturile
         this.loadCapturi();
       } else {
         console.error("Nu ești logat! Nu pot încărca istoricul.");
-        // Aici ai putea să îi dai redirect către login
       }
     }
   }
 
   loadCapturi() {
-    // Verificăm să avem un ID valid înainte să sunăm la server
     if (!this.userId) return;
 
     this.service.getCapturiUser(this.userId).subscribe({
@@ -85,6 +78,19 @@ export class HistoryComponent implements OnInit {
             this.capturi = this.capturi.filter(c => c.id !== id);
         });
     }
+  }
+
+  // ==========================================
+  // NOU: FUNCȚIE DESCHIDERE LOCAȚIE PE HARTĂ
+  // ==========================================
+  openMap(lat: number, lng: number) {
+      if (lat && lng) {
+          // Deschide Google Maps cu un pin exact pe coordonatele respective
+          const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+          window.open(url, '_blank');
+      } else {
+          alert("📍 Această captură nu are coordonate GPS salvate.");
+      }
   }
 
   getSanitizedUrl(cale: string): SafeUrl {

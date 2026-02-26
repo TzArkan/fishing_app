@@ -3,7 +3,7 @@
   <div class="glass-card encyclopedia-container">
     
     <div class="header-section">
-      <h2>📖 Enciclopedia Peștilor</h2>
+      <h2>Enciclopedia Peștilor</h2>
       
       <div class="filters">
         <button [class.active]="activeFilter === 'all'" (click)="filter('all')">Toți</button>
@@ -13,7 +13,7 @@
     </div>
 
     <div *ngIf="isLoading" class="loading-msg">
-      🎣 Se încarcă informațiile biologice...
+       Se încarcă informațiile...
     </div>
 
     <div class="fish-grid" *ngIf="!isLoading">
@@ -35,9 +35,14 @@
 </div>
 
 <div class="modal-overlay" *ngIf="selectedFish" (click)="closeModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()"> <button class="close-btn" (click)="closeModal()">×</button>
+  <div class="modal-content" (click)="$event.stopPropagation()">
     
-    <div class="modal-layout">
+    <div class="modal-header-bar">
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    
+    <div class="modal-scroll-area">
+      
       <div class="modal-img">
         <img [src]="selectedFish.image" [alt]="selectedFish.nameRo">
       </div>
@@ -86,7 +91,5 @@
                 <strong>Dietă:</strong><br> {{ selectedFish.diet }}
             </div>
         </div>
-      </div>
-    </div>
-  </div>
+      </div> </div> </div>
 </div>

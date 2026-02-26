@@ -219,3 +219,176 @@ textarea.form-control {
     from { transform: translateY(50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+.btn-ai {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3);
+}
+
+.btn-ai:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(142, 68, 173, 0.5);
+}
+
+.btn-ai:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.ai-success-msg {
+  display: block;
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  margin-left: 5px;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.ai-highlight {
+  border-color: #8e44ad !important;
+  box-shadow: 0 0 0 4px rgba(142, 68, 173, 0.1) !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.photo-section {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+.photo-upload-zone {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  border: 2px dashed #b2bec3;
+  border-radius: 12px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.photo-upload-zone:hover {
+  border-color: #3498db;
+  background: #f1f7fc;
+}
+
+.photo-upload-zone.has-image {
+  border-style: solid;
+  border-color: #eee;
+  background: white;
+  min-height: 250px; /* Mai înalt pentru a acomoda previzualizarea */
+}
+
+/* Label-ul care acționează ca buton de upload */
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #636e72;
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.upload-placeholder .icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.upload-placeholder .text {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.upload-placeholder small {
+  margin-top: 5px;
+  font-size: 0.8rem;
+}
+
+/* Input-ul file real este ascuns */
+.hidden-input {
+  display: none;
+}
+
+/* CONTAINERUL PREVIZUALIZĂRII */
+.photo-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.photo-preview img {
+  max-width: 100%;
+  max-height: 250px;
+  object-fit: contain; /* Arată toată poza fără crop */
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Butonul roșu (X) de ștergere a pozei */
+.btn-remove-photo {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(231, 76, 60, 0.9);
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background 0.2s;
+  z-index: 2;
+}
+
+.btn-remove-photo:hover { 
+  background: #c0392b; 
+}
+
+/* Separatorul subțire dintre secțiuni */
+.separator {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 25px 0;
+}
+
+/* Mică ajustare pentru responsive la zona de upload */
+@media (max-width: 600px) {
+  .photo-section { padding: 15px; }
+  .photo-upload-zone { min-height: 150px; }
+  .upload-placeholder .icon { font-size: 2.5rem; }
+  .upload-placeholder .text { font-size: 1rem; }
+}
